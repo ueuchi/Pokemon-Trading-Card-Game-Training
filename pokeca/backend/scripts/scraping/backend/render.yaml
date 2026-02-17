@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: pokemon-card-api
+    env: python
+    buildCommand: pip install -r requirements.txt && python -m database.setup
+    startCommand: python main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+```
+
+### 2. Renderにデプロイ
+
+1. https://render.com にアクセス
+2. GitHubアカウントでサインアップ
+3. 「New +」→「Web Service」をクリック
+4. GitHubリポジトリを選択
+5. 以下を設定：
+```
+Name:          pokemon-card-api
+Root Directory: backend
+Environment:   Python 3
+Build Command: pip install -r requirements.txt && python -m database.setup
+Start Command: python main.py
+```
+
+6. 「Create Web Service」をクリック
+7. デプロイ完了後、以下のようなURLが発行されます：
+```
+https://pokemon-card-api.onrender.com
