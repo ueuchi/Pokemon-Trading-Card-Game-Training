@@ -1,0 +1,26 @@
+# requirements.txt
+
+# Webスクレイピング
+selenium==4.16.0
+webdriver-manager==4.0.1
+beautifulsoup4==4.12.2
+requests==2.31.0
+lxml==5.1.0
+
+# 画像処理（エラーが出るのでスキップ）
+# Pillow==10.2.0
+
+# バックエンドAPI
+fastapi==0.109.0
+uvicorn==0.27.0
+pydantic==2.5.3
+
+# データ検証・変換
+python-multipart==0.0.6
+
+# テスト
+pytest==7.4.4
+pytest-asyncio==0.23.3
+
+# その他
+python-dotenv==1.0.0

@@ -1,0 +1,7 @@
+<div class="card-viewer-container">
+  <!-- カード一覧 -->
+  <card-list (cardSelected)="onCardSelected($event)"></card-list>
+
+  <!-- カード詳細（モーダル） -->
+  <card-detail [card]="selectedCard" (close)="onCloseDetail()"></card-detail>
+</div>

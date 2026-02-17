@@ -1,0 +1,86 @@
+[
+  {
+    "name": "イトマル",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/M3/049634_P_ITOMARU.jpg",
+    "list_index": 0,
+    "hp": 60,
+    "type": "草",
+    "evolution_stage": "たね",
+    "attacks": [
+      {
+        "name": "ねばるいと",
+        "energy": [
+          "草"
+        ],
+        "energy_count": 1,
+        "damage": 10,
+        "description": "次の相手の番、このワザを受けたポケモンは、にげられない。"
+      }
+    ],
+    "weakness": {
+      "type": "炎",
+      "value": "×2"
+    },
+    "resistance": null,
+    "retreat_cost": 1
+  },
+  {
+    "name": "アリアドス",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/M3/049635_P_ARIADOSU.jpg",
+    "list_index": 1,
+    "hp": 110,
+    "type": "草",
+    "evolution_stage": "1 進化",
+    "attacks": [
+      {
+        "name": "ポイズンサークル",
+        "energy": [
+          "草"
+        ],
+        "energy_count": 1,
+        "damage": 50,
+        "description": "相手のバトルポケモンをどくにする。次の相手の番、このワザを受けたポケモンは、にげられない。"
+      }
+    ],
+    "weakness": {
+      "type": "炎",
+      "value": "×2"
+    },
+    "resistance": null,
+    "retreat_cost": 1
+  },
+  {
+    "name": "シェイミ",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/M3/049636_P_SHIEIMI.jpg",
+    "list_index": 2,
+    "hp": 70,
+    "type": "草",
+    "evolution_stage": "たね",
+    "attacks": [
+      {
+        "name": "はなをとどける",
+        "energy": [
+          "草"
+        ],
+        "energy_count": 1,
+        "damage": 0,
+        "description": "自分の山札からエネルギーを1枚選び、ベンチのポケモンにつける。そして山札を切る。"
+      },
+      {
+        "name": "リーフステップ",
+        "energy": [
+          "草"
+        ],
+        "energy_count": 1,
+        "damage": 30,
+        "description": ""
+      }
+    ],
+    "weakness": {
+      "type": "炎",
+      "value": "×2"
+    },
+    "resistance": null,
+    "retreat_cost": 0
+  }
+]

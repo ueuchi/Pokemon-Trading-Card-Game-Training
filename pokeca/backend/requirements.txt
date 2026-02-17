@@ -1,0 +1,9 @@
+# FastAPI (Pydantic v1互換バージョン)
+fastapi==0.103.2
+uvicorn[standard]==0.24.0
+
+# Pydantic v1
+pydantic==1.10.13
+
+# その他
+python-multipart==0.0.6

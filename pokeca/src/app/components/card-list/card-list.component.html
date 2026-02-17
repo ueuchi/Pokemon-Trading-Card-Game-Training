@@ -1,0 +1,27 @@
+<div class="card-list-container">
+  <h2 class="card-list-title">ポケモンカード一覧</h2>
+
+  @if (loading) {
+    <div class="loading">
+      <p>読み込み中...</p>
+    </div>
+  } @else if (cards.length === 0) {
+    <div class="empty">
+      <p>カードが見つかりませんでした</p>
+    </div>
+  } @else {
+    <div class="card-grid">
+      @for (card of cards; track card.list_index) {
+        <div class="card-item" (click)="onCardClick(card)">
+          <div class="card-image-wrapper">
+            <img [src]="card.image_url" [alt]="card.name" class="card-image" />
+          </div>
+          <div class="card-info">
+            <h3 class="card-name">{{ card.name }}</h3>
+            <p class="card-hp">HP {{ card.hp }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
