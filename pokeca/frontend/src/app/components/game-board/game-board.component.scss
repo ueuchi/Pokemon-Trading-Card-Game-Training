@@ -1,0 +1,494 @@
+// ゲーム全体のコンテナ
+.game-container {
+  background: url('https://www.pokemon-card.com/info/2020/05/images/PCG_wallpaper_room_day.jpg')
+    center / cover no-repeat;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  min-height: 100vh;
+}
+
+// ヘッダー
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+// ボタン共通スタイル
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+
+  &:hover {
+    background: #2980b9;
+  }
+}
+
+.btn-secondary {
+  background: #95a5a6;
+  color: white;
+
+  &:hover {
+    background: #7f8c8d;
+  }
+}
+
+.btn-action {
+  background: #2ecc71;
+  color: white;
+  width: 100%;
+  margin-bottom: 10px;
+
+  &:hover {
+    background: #27ae60;
+  }
+}
+
+.btn-attack {
+  background: #e74c3c;
+  color: white;
+  width: 100%;
+  margin-bottom: 10px;
+
+  &:hover {
+    background: #c0392b;
+  }
+}
+
+.btn-end-turn {
+  background: #34495e;
+  color: white;
+  width: 100%;
+
+  &:hover {
+    background: #2c3e50;
+  }
+}
+
+// ゲーム終了画面
+.game-over {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+
+  h2 {
+    font-size: 36px;
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+  }
+
+  .winner {
+    font-size: 24px;
+    font-weight: bold;
+    color: #e74c3c;
+    margin-bottom: 30px;
+  }
+}
+
+// ゲームボード
+.game-board {
+  display: grid;
+  grid-template-columns: 1fr 300px 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+// プレイヤーエリア
+.player-area {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 20px;
+  }
+
+  h3 {
+    margin: 0 0 10px 0;
+    color: #34495e;
+    font-size: 16px;
+  }
+}
+
+.cpu-area {
+  border-top: 3px solid #e74c3c;
+}
+
+.player-area-main {
+  border-top: 3px solid #3498db;
+}
+
+// アクティブポケモンエリア
+.active-pokemon-area {
+  margin-bottom: 20px;
+
+  .empty-slot {
+    padding: 40px 20px;
+    text-align: center;
+    border: 2px dashed #bdc3c7;
+    border-radius: 6px;
+    color: #7f8c8d;
+    font-size: 14px;
+  }
+}
+
+// ポケモンカード
+.pokemon-card {
+  border: 2px solid #34495e;
+  border-radius: 8px;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+
+  &.player-pokemon {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+
+    .pokemon-name {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .pokemon-type {
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.3);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+  }
+
+  .card-body {
+    .hp-bar {
+      margin-bottom: 15px;
+
+      .hp-text {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
+
+      .hp-progress {
+        height: 20px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        overflow: hidden;
+
+        .hp-fill {
+          height: 100%;
+          background: #2ecc71;
+          transition: width 0.3s;
+        }
+      }
+    }
+
+    .attached-energy {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 15px;
+
+      .energy-label {
+        font-size: 14px;
+        margin-right: 5px;
+      }
+
+      .energy-icon {
+        background: rgba(255, 255, 255, 0.3);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+
+      .no-energy {
+        font-size: 12px;
+        opacity: 0.7;
+      }
+    }
+
+    .attacks {
+      h4 {
+        margin: 0 0 10px 0;
+        font-size: 14px;
+      }
+
+      .attack-option {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        justify-content: space-between;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        &.selected {
+          background: rgba(255, 255, 255, 0.4);
+          border: 2px solid white;
+        }
+
+        .attack-name {
+          font-weight: bold;
+        }
+
+        .attack-damage {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
+
+// 手札エリア
+.hand-area {
+  margin-bottom: 20px;
+
+  .hand-cards {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .hand-card {
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      transform: translateY(-5px);
+    }
+
+    &.selected {
+      .card-mini {
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+      }
+    }
+
+    .card-mini {
+      width: 100px;
+      padding: 10px;
+      border: 2px solid #bdc3c7;
+      border-radius: 6px;
+      background: white;
+      transition: all 0.2s;
+
+      .card-name {
+        display: block;
+        font-size: 12px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #2c3e50;
+      }
+
+      .card-type-badge {
+        display: inline-block;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        background: #ecf0f1;
+        color: #7f8c8d;
+      }
+    }
+
+    &.pokemon .card-mini {
+      border-color: #e74c3c;
+    }
+
+    &.energy .card-mini {
+      border-color: #f39c12;
+    }
+  }
+}
+
+// プレイヤー情報
+.player-info {
+  display: flex;
+  justify-content: space-around;
+  padding: 15px;
+  background: #ecf0f1;
+  border-radius: 6px;
+
+  .info-item {
+    text-align: center;
+
+    .info-label {
+      display: block;
+      font-size: 12px;
+      color: #7f8c8d;
+      margin-bottom: 5px;
+    }
+
+    .info-value {
+      display: block;
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+  }
+}
+
+// ターン情報
+.turn-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .turn-indicator {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+
+    h3 {
+      margin: 0 0 10px 0;
+      color: #2c3e50;
+      font-size: 24px;
+    }
+
+    .current-turn {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .phase {
+      font-size: 14px;
+      color: #7f8c8d;
+    }
+
+    &.player-turn {
+      border: 3px solid #3498db;
+
+      .current-turn {
+        color: #3498db;
+      }
+    }
+
+    &.cpu-turn {
+      border: 3px solid #e74c3c;
+
+      .current-turn {
+        color: #e74c3c;
+      }
+    }
+  }
+}
+
+// アクションパネル
+.action-panel {
+  grid-column: 2;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+
+  h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 16px;
+  }
+}
+
+// ゲームログ
+.game-logs {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-height: 400px;
+  overflow-y: auto;
+
+  h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 18px;
+  }
+
+  .log-content {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+
+    .log-entry {
+      margin: 5px 0;
+      padding: 5px;
+      border-left: 3px solid #3498db;
+      padding-left: 10px;
+
+      &:nth-child(even) {
+        background: #f8f9fa;
+      }
+    }
+  }
+}
+
+// レスポンシブ対応
+@media (max-width: 1200px) {
+  .game-board {
+    grid-template-columns: 1fr;
+
+    .turn-info {
+      order: -1;
+    }
+
+    .action-panel {
+      grid-column: 1;
+    }
+  }
+}
+
+.backgroungImg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  opacity: 0.2;
+}

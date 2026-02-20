@@ -7,9 +7,10 @@
     "types": []
   },
   "include": [
-    "src/**/*.ts"
+    "frontend/src/**/*.ts",
+    "frontend/src/app/app.component.ts",
+    "frontend/src/app/app.config.ts",
+    "frontend/src/app/app.routes.ts"
   ],
-  "exclude": [
-    "src/**/*.spec.ts"
-  ]
+  "exclude": ["frontend/src/**/*.spec.ts"]
 }

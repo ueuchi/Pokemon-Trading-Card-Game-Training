@@ -1,0 +1,272 @@
+/* オーバーレイ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* モーダルパネル */
+.modal-panel {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ヘッダー */
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 20px;
+  color: #fff;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-category {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.card-name {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.evolution-stage {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.15s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* ボディ */
+.modal-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 20px;
+}
+
+.detail-layout {
+  display: flex;
+  gap: 20px;
+}
+
+/* 左：画像 */
+.image-col {
+  flex-shrink: 0;
+  width: 180px;
+}
+
+.card-image {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.image-placeholder {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 右：情報 */
+.info-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.info-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 8px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 4px;
+}
+
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th {
+    width: 110px;
+    color: #888;
+    font-weight: 500;
+    text-align: left;
+    padding: 4px 0;
+  }
+
+  td {
+    color: #333;
+    padding: 4px 0;
+  }
+}
+
+.type-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.hp-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #c0392b;
+}
+
+/* ワザ */
+.attack-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.attack-item {
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  border-left: 3px solid #ddd;
+}
+
+.attack-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.attack-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.attack-damage {
+  font-size: 13px;
+  font-weight: 700;
+  color: #c0392b;
+}
+
+.attack-cost {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.attack-desc {
+  font-size: 12px;
+  color: #555;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* フッター */
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.btn-secondary {
+  background: #f0f0f0;
+  color: #333;
+
+  &:hover {
+    background: #e0e0e0;
+  }
+}
+
+/* レスポンシブ */
+@media (max-width: 480px) {
+  .detail-layout {
+    flex-direction: column;
+  }
+
+  .image-col {
+    width: 140px;
+    margin: 0 auto;
+  }
+}

@@ -1,0 +1,240 @@
+<div class="deck-builder-container">
+  <div class="header">
+    <h1>デッキ作成</h1>
+  </div>
+
+  <!-- エラーメッセージ -->
+  @if (errorMessage) {
+    <div class="error-banner">{{ errorMessage }}</div>
+  }
+
+  <!-- ===== デッキ一覧 ===== -->
+  @if (!currentDeck && !isCreatingNewDeck) {
+    <div class="deck-list-view">
+      <div class="header-actions">
+        <h2>保存済みデッキ ({{ savedDecks.length }}個)</h2>
+        <button class="btn btn-primary" (click)="startNewDeck()">新しいデッキを作成</button>
+      </div>
+
+      @if (savedDecks.length === 0) {
+        <div class="empty-message">デッキがまだ作成されていません</div>
+      }
+
+      <div class="decks-grid">
+        @for (deck of savedDecks; track deck.id) {
+          <div class="deck-card">
+            <div class="deck-header">
+              <h3>{{ deck.name }}</h3>
+              <span class="deck-count">{{ deck.total_count }}枚</span>
+            </div>
+            @if (deck.description) {
+              <p class="deck-description">{{ deck.description }}</p>
+            }
+            <div class="deck-stats">
+              <span>ポケモン: {{ getDeckCounts(deck).pokemon }}枚</span>
+              <span>トレーナー: {{ getDeckCounts(deck).trainer }}枚</span>
+              <span>エネルギー: {{ getDeckCounts(deck).energy }}枚</span>
+            </div>
+            <div class="deck-actions">
+              <button class="btn btn-primary" (click)="editDeck(deck)">編集</button>
+              <button class="btn btn-delete" (click)="deleteDeck(deck.id)">削除</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ===== 新規デッキ作成フォーム ===== -->
+  @if (isCreatingNewDeck) {
+    <div class="new-deck-form">
+      <h2>新しいデッキを作成</h2>
+
+      <div class="form-group">
+        <label>デッキ名 *</label>
+        <input
+          type="text"
+          class="form-input"
+          [(ngModel)]="newDeckName"
+          placeholder="例: 電撃デッキ"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>説明（任意）</label>
+        <textarea
+          class="form-textarea"
+          [(ngModel)]="newDeckDescription"
+          placeholder="デッキの説明を入力"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" (click)="createNewDeck()" [disabled]="!newDeckName.trim()">
+          作成
+        </button>
+        <button class="btn btn-secondary" (click)="cancelNewDeck()">キャンセル</button>
+      </div>
+    </div>
+  }
+
+  <!-- ===== デッキ編集画面 ===== -->
+  @if (currentDeck) {
+    <div class="deck-editor">
+
+      <!-- エディターヘッダー -->
+      <div class="editor-header">
+        <div class="deck-info">
+          <h2>{{ currentDeck.name }}</h2>
+          @if (currentDeck.description) {
+            <p>{{ currentDeck.description }}</p>
+          }
+        </div>
+        <div class="deck-count-display">
+          <span class="count" [class.complete]="getTotalCount() === CONSTRAINTS.TOTAL_CARDS">
+            {{ getTotalCount() }} / {{ CONSTRAINTS.TOTAL_CARDS }}枚
+          </span>
+        </div>
+      </div>
+
+      <!-- バリデーションメッセージ -->
+      @if (validationMessages.length > 0) {
+        <div class="validation-messages">
+          <div *ngFor="let msg of validationMessages" class="validation-message">
+            ⚠️ {{ msg }}
+          </div>
+        </div>
+      }
+
+      <!-- メインレイアウト -->
+      <div class="editor-layout">
+
+        <!-- 左：カードプール（APIから取得） -->
+        <div class="card-pool">
+          <h3>
+            利用可能なカード
+            @if (isLoading) { <span class="loading-inline">読み込み中...</span> }
+            @else { <span class="pool-count">({{ filteredCards.length }}件)</span> }
+          </h3>
+
+          <!-- フィルター -->
+          <div class="filters">
+            <div class="filter-buttons">
+              <button class="filter-btn" [class.active]="filterType === 'ALL'"     (click)="filterType = 'ALL'">すべて</button>
+              <button class="filter-btn" [class.active]="filterType === 'POKEMON'" (click)="filterType = 'POKEMON'">ポケモン</button>
+              <button class="filter-btn" [class.active]="filterType === 'TRAINER'" (click)="filterType = 'TRAINER'">トレーナー</button>
+              <button class="filter-btn" [class.active]="filterType === 'ENERGY'"  (click)="filterType = 'ENERGY'">エネルギー</button>
+            </div>
+            <input
+              type="text"
+              class="search-input"
+              [(ngModel)]="searchQuery"
+              placeholder="カード名で検索"
+            />
+          </div>
+
+          <!-- カードリスト -->
+          <div class="cards-list">
+            @for (card of filteredCards; track card.id) {
+              <div class="card-item">
+                <div class="card-info">
+                  <span class="card-name">{{ card.name }}</span>
+                  <span class="card-type-badge">{{ getCategoryLabel(card.evolution_stage) }}</span>
+                  @if (card.hp) {
+                    <span class="card-hp">HP{{ card.hp }}</span>
+                  }
+                </div>
+                <div class="card-actions">
+                  <span class="card-count-in-deck">
+                    @if (getCardCount(card.id) > 0) { {{ getCardCount(card.id) }}枚 }
+                  </span>
+                  <button
+                    class="btn-icon btn-add"
+                    (click)="addCard(card)"
+                    [disabled]="
+                      getTotalCount() >= CONSTRAINTS.TOTAL_CARDS ||
+                      (!isBasicEnergy(card) && getCardCount(card.id) >= CONSTRAINTS.MAX_SAME_CARD)
+                    "
+                  >+</button>
+                </div>
+              </div>
+            }
+
+            @if (!isLoading && filteredCards.length === 0) {
+              <div class="empty-pool">カードが見つかりません</div>
+            }
+          </div>
+
+          <!-- 基本エネルギー（固定表示） -->
+          @if (filterType === 'ALL' || filterType === 'ENERGY') {
+            <div class="basic-energy-section">
+              <h4 class="basic-energy-title">基本エネルギー（枚数制限なし）</h4>
+              <div class="basic-energy-list">
+                @for (energy of basicEnergies; track energy.id) {
+                  <div class="energy-item">
+                    <div class="energy-info">
+                      <span class="energy-icon" [style.color]="getTypeColor(energy.type)">●</span>
+                      <span class="card-name">{{ energy.name }}</span>
+                    </div>
+                    <div class="card-actions">
+                      <span class="card-count-in-deck">
+                        @if (getCardCount(energy.id) > 0) { {{ getCardCount(energy.id) }}枚 }
+                      </span>
+                      <button
+                        class="btn-icon btn-add"
+                        (click)="addCard(energy)"
+                        [disabled]="getTotalCount() >= CONSTRAINTS.TOTAL_CARDS"
+                      >+</button>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- 右：現在のデッキ -->
+        <div class="current-deck">
+          <h3>現在のデッキ ({{ getTotalCount() }}枚)</h3>
+
+          @if (currentDeckEntries.length === 0) {
+            <div class="empty-deck">左側からカードを追加してください</div>
+          }
+
+          <div class="deck-cards-list">
+            @for (entry of currentDeckEntries; track entry.card.id) {
+              <div class="deck-card-item">
+                <div class="deck-card-info">
+                  <span class="deck-card-name">{{ entry.card.name }}</span>
+                  <span class="deck-card-type">{{ getCategoryLabel(entry.card.evolution_stage) }}</span>
+                </div>
+                <div class="deck-card-actions">
+                  <button class="btn-icon btn-remove" (click)="removeCard(entry.card.id)">-</button>
+                  <span class="deck-card-count">{{ entry.count }}枚</span>
+                  <button
+                    class="btn-icon btn-add"
+                    (click)="addCard(entry.card)"
+                    [disabled]="
+                      getTotalCount() >= CONSTRAINTS.TOTAL_CARDS ||
+                      (!isBasicEnergy(entry.card) && entry.count >= CONSTRAINTS.MAX_SAME_CARD)
+                    "
+                  >+</button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- アクションボタン -->
+      <div class="editor-actions">
+        <button class="btn btn-primary btn-large" (click)="saveDeck()" [disabled]="!canSaveDeck">
+          @if (isSaving) { 保存中... }
+          @else { デッキを保存 ({{ getTotalCount() }}/{{ CONSTRAINTS.TOTAL_CARDS }}枚) }
+        </button>
+        <button class="btn btn-secondary" (click)="cancelEdit()">キャンセル</button>
+      </div>
+    </div>
+  }
+</div>

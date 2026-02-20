@@ -1,0 +1,554 @@
+.deck-builder-container {
+  background: url('https://i0.wp.com/tcg-fun.net/wp-content/uploads/2023/06/image-969.webp?fit=1130,639&ssl=1')
+    center / cover no-repeat;
+  padding: 20px;
+  min-height: 100vh;
+
+  h2 {
+    color: #2c3e50;
+    margin: 0 0 20px 0;
+    font-size: 24px;
+  }
+
+  h3 {
+    color: #34495e;
+    margin: 0 0 15px 0;
+    font-size: 18px;
+  }
+}
+
+// ボタン
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: #2980b9;
+  }
+}
+
+.btn-secondary {
+  background: #95a5a6;
+  color: white;
+
+  &:hover {
+    background: #7f8c8d;
+  }
+}
+
+.btn-delete {
+  background: #e74c3c;
+  color: white;
+
+  &:hover {
+    background: #c0392b;
+  }
+}
+
+.btn-large {
+  padding: 15px 30px;
+  font-size: 16px;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.btn-add {
+  background: #2ecc71;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: #27ae60;
+  }
+}
+
+.btn-remove {
+  background: #e74c3c;
+  color: white;
+
+  &:hover {
+    background: #c0392b;
+  }
+}
+
+// デッキ一覧画面
+.deck-list-view {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 60px 20px;
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+.decks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.deck-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+
+  .deck-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+
+    h3 {
+      margin: 0;
+      color: white;
+      font-size: 20px;
+    }
+
+    .deck-count {
+      background: rgba(255, 255, 255, 0.3);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  }
+
+  .deck-description {
+    margin: 10px 0;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+
+  .deck-stats {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+    font-size: 13px;
+    opacity: 0.9;
+  }
+
+  .deck-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
+// 新規デッキフォーム
+.new-deck-form {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-group {
+  margin-bottom: 20px;
+
+  label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #34495e;
+  }
+
+  .form-input,
+  .form-textarea {
+    width: 100%;
+    padding: 10px 15px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+
+    &:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+  }
+
+  .form-textarea {
+    resize: vertical;
+    font-family: inherit;
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+// デッキ編集画面
+.deck-editor {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #ecf0f1;
+
+  .deck-info {
+    h2 {
+      margin: 0 0 10px 0;
+    }
+
+    p {
+      margin: 0;
+      color: #7f8c8d;
+    }
+  }
+
+  .deck-count-display {
+    .count {
+      font-size: 32px;
+      font-weight: bold;
+      color: #e74c3c;
+
+      &.complete {
+        color: #2ecc71;
+      }
+    }
+  }
+}
+
+.validation-messages {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+
+  .validation-message {
+    margin: 5px 0;
+    color: #856404;
+  }
+}
+
+.editor-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// カードプール
+.card-pool {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.filters {
+  margin-bottom: 20px;
+
+  .filter-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+
+    .filter-btn {
+      padding: 8px 16px;
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+
+      &:hover {
+        border-color: #3498db;
+      }
+
+      &.active {
+        background: #3498db;
+        color: white;
+        border-color: #3498db;
+      }
+    }
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+
+    &:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+  }
+}
+
+.cards-list {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.card-item {
+  background: white;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .card-name {
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .card-type-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      background: #ecf0f1;
+      color: #7f8c8d;
+
+      &.pokemon {
+        background: #e74c3c;
+        color: white;
+      }
+    }
+  }
+
+  .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .card-count-in-deck {
+      font-size: 14px;
+      color: #7f8c8d;
+      min-width: 40px;
+      text-align: right;
+    }
+  }
+}
+
+// 現在のデッキ
+.current-deck {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.empty-deck {
+  text-align: center;
+  padding: 60px 20px;
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.deck-cards-list {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.deck-card-item {
+  background: white;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .deck-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    .deck-card-name {
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .deck-card-type {
+      font-size: 12px;
+      color: #7f8c8d;
+    }
+  }
+
+  .deck-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .deck-card-count {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2c3e50;
+      min-width: 50px;
+      text-align: center;
+    }
+  }
+}
+
+// エディターアクション
+.editor-actions {
+  display: flex;
+  gap: 15px;
+  padding-top: 30px;
+  border-top: 2px solid #ecf0f1;
+}
+// ===== フェーズ6追加スタイル =====
+
+.error-banner {
+  background: #fdecea;
+  color: #c0392b;
+  border: 1px solid #e74c3c;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.loading-inline {
+  font-size: 13px;
+  font-weight: normal;
+  color: #7f8c8d;
+  margin-left: 8px;
+}
+
+.pool-count {
+  font-size: 13px;
+  font-weight: normal;
+  color: #7f8c8d;
+  margin-left: 8px;
+}
+
+.card-hp {
+  font-size: 12px;
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.empty-pool {
+  text-align: center;
+  padding: 40px 20px;
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+// ===== 基本エネルギーセクション =====
+
+.basic-energy-section {
+  margin-top: 20px;
+  border-top: 2px dashed #ddd;
+  padding-top: 16px;
+}
+
+.basic-energy-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #7f8c8d;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.basic-energy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.energy-item {
+  background: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.energy-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.energy-icon {
+  font-size: 18px;
+  line-height: 1;
+}

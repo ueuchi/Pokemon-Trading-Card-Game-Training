@@ -1,0 +1,552 @@
+<div class="card-creator-container">
+  <div class="header">
+    <h1>カード作成</h1>
+  </div>
+
+  <div class="creator-layout">
+    <!-- 左側：作成フォーム -->
+    <div class="form-section">
+      <h2>新しいカードを作成</h2>
+      <img src="https://assets.tcgdex.net/en/swsh/swsh3/136" alt="" />
+
+      <!-- カードタイプ選択 -->
+      <div class="form-group">
+        <label class="form-label">カードの種類 *</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input
+              type="radio"
+              name="cardType"
+              value="POKEMON"
+              [(ngModel)]="formData.cardType"
+              (change)="onCardTypeChange()"
+            />
+            <span>ポケモン</span>
+          </label>
+          <label class="radio-option">
+            <input
+              type="radio"
+              name="cardType"
+              value="TRAINER"
+              [(ngModel)]="formData.cardType"
+              (change)="onCardTypeChange()"
+            />
+            <span>トレーナー</span>
+          </label>
+          <label class="radio-option">
+            <input
+              type="radio"
+              name="cardType"
+              value="ENERGY"
+              [(ngModel)]="formData.cardType"
+              (change)="onCardTypeChange()"
+            />
+            <span>エネルギー</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ポケモンカード固有の設定 -->
+      <!-- カード名 -->
+      @if (formData.cardType === 'POKEMON') {
+        <div class="form-group">
+          <label class="form-label">カード名 *</label>
+          <auto-input
+            [options]="[...pokemonNameList]"
+            [placeholder]="'例: ピカチュウ'"
+            (valueChange)="onSelect($event)"
+          ></auto-input>
+        </div>
+        <!-- ポケモンのルール -->
+        <div class="form-group">
+          <label class="form-label">ポケモンのルール</label>
+          <select class="form-select" [(ngModel)]="formData.monsterRule">
+            @for (evo of PRESETS.MONSTER_RULE_OPTIONS; track evo) {
+              <option [value]="evo">
+                {{ evo.label }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <!-- ポケモンのトレーナー -->
+        <div class="form-group">
+          <label class="form-label">ポケモンのトレーナー</label>
+          <auto-input
+            [options]="trainerNameList"
+            [placeholder]="'例: カスミ'"
+            (valueChange)="onSelect($event)"
+          ></auto-input>
+        </div>
+
+        <!-- 進化段階 -->
+        <div class="form-group">
+          <label class="form-label">進化段階 *</label>
+          <select class="form-select" [(ngModel)]="formData.evolution">
+            @for (evo of PRESETS.EVOLUTION_OPTIONS; track evo) {
+              <option [value]="evo">
+                {{ evo.label }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <!-- HP -->
+        <div class="form-group">
+          <label class="form-label">HP *</label>
+          <select class="form-select" [(ngModel)]="formData.hp">
+            <option *ngFor="let hp of PRESETS.HP_OPTIONS" [value]="hp">
+              {{ hp }}
+            </option>
+          </select>
+        </div>
+
+        <!-- エネルギータイプ -->
+        <div class="form-group">
+          <label class="form-label">タイプ *</label>
+          <select class="form-select" [(ngModel)]="formData.energyType">
+            <option *ngFor="let type of PRESETS.ENERGY_TYPE_OPTIONS" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- 逃げるコスト -->
+        <div class="form-group">
+          <label class="form-label">逃げるコスト</label>
+          <select class="form-select" [(ngModel)]="formData.retreatCost">
+            <option *ngFor="let cost of PRESETS.RETREAT_COST_OPTIONS" [value]="cost">
+              {{ cost }}
+            </option>
+          </select>
+        </div>
+
+        <!-- ワザのリスト -->
+        <div class="form-group">
+          <label class="form-label">特性（最大1個）</label>
+
+          <div class="attacks-list">
+            <div *ngFor="let attack of formData.attacks; let i = index" class="attack-item">
+              <div class="attack-summary">
+                <span class="attack-name">{{ attack.name }}</span>
+                <div class="attack-actions">
+                  <button type="button" class="btn-small btn-edit" (click)="startEditingAttack(i)">
+                    編集
+                  </button>
+                  <button type="button" class="btn-small btn-delete" (click)="deleteAttack(i)">
+                    削除
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          @if (!isEditingAttack && (!formData.attacks || formData.attacks.length < 2)) {
+            <button type="button" class="btn btn-secondary" (click)="startAddingAttack()">
+              特性を追加
+            </button>
+          }
+        </div>
+
+        <div class="attack-editor">
+          <h3>{{ editingAttackIndex !== null ? '特性を編集' : '特性を追加' }}</h3>
+
+          <!-- 特性名 -->
+          <div class="form-group">
+            <label class="form-label">特性名</label>
+            <input
+              type="text"
+              class="form-input"
+              [(ngModel)]="tempAttack.name"
+              placeholder="例: ほのお"
+            />
+            <div class="sample-names">
+              サンプル:
+              <span
+                *ngFor="let sample of PRESETS.ATTACK_NAME_SAMPLES.slice(0, 6)"
+                class="sample-name"
+                (click)="tempAttack.name = sample"
+              >
+                {{ sample }}
+              </span>
+            </div>
+          </div>
+
+          <!-- エネルギーコスト -->
+          <div class="form-group">
+            <label class="form-label">エネルギーコスト</label>
+            <div *ngFor="let cost of tempAttack.energyCosts; let i = index" class="energy-cost-row">
+              <select class="form-select" [(ngModel)]="cost.type">
+                <option *ngFor="let type of PRESETS.ENERGY_TYPE_OPTIONS" [value]="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+              <select class="form-select-small" [(ngModel)]="cost.amount">
+                <option [value]="1">1個</option>
+                <option [value]="2">2個</option>
+                <option [value]="3">3個</option>
+              </select>
+              @if (tempAttack.energyCosts.length > 1) {
+                <button type="button" class="btn-icon btn-delete" (click)="removeEnergyCost(i)">
+                  ×
+                </button>
+              }
+            </div>
+            @if (tempAttack.energyCosts.length < 3) {
+              <button type="button" class="btn-small btn-secondary" (click)="addEnergyCost()">
+                + エネルギー追加
+              </button>
+            }
+          </div>
+
+          <!-- 効果 -->
+          <div class="form-group">
+            <label class="form-label">効果</label>
+            <div *ngFor="let effect of tempAttack.effects; let i = index" class="effect-row">
+              <select class="form-select" [(ngModel)]="effect.effectType">
+                <option *ngFor="let type of PRESETS.EFFECT_TYPE_OPTIONS" [value]="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+
+              <!-- ダメージ量 -->
+              @if (effect.effectType === 'DAMAGE') {
+                <select class="form-select-small" [(ngModel)]="effect.damageAmount">
+                  <option *ngFor="let damage of PRESETS.DAMAGE_OPTIONS" [value]="damage">
+                    {{ damage }}
+                  </option>
+                </select>
+              }
+
+              <!-- 回復量 -->
+              @if (effect.effectType === 'HEAL') {
+                <select class="form-select-small" [(ngModel)]="effect.healAmount">
+                  <option *ngFor="let heal of PRESETS.HEAL_OPTIONS" [value]="heal">
+                    {{ heal }}
+                  </option>
+                </select>
+              }
+
+              <!-- ドロー枚数 -->
+              @if (effect.effectType === 'DRAW') {
+                <select class="form-select-small" [(ngModel)]="effect.drawAmount">
+                  <option *ngFor="let draw of PRESETS.DRAW_OPTIONS" [value]="draw">
+                    {{ draw }}枚
+                  </option>
+                </select>
+              }
+
+              @if (tempAttack.effects.length > 1) {
+                <button type="button" class="btn-icon btn-delete" (click)="removeEffect(i)">
+                  ×
+                </button>
+              }
+            </div>
+            <button type="button" class="btn-small btn-secondary" (click)="addEffect()">
+              + 効果追加
+            </button>
+          </div>
+
+          <!-- ワザ保存ボタン -->
+          <div class="attack-editor-actions">
+            <button type="button" class="btn btn-primary" (click)="saveAttack()">
+              {{ editingAttackIndex !== null ? 'ワザを更新' : 'ワザを保存' }}
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="cancelAttackEdit()">
+              キャンセル
+            </button>
+          </div>
+        </div>
+
+        <!-- ワザのリスト -->
+        <div class="form-group">
+          <label class="form-label">ワザ（最大2個）*</label>
+
+          <div class="attacks-list">
+            <div *ngFor="let attack of formData.attacks; let i = index" class="attack-item">
+              <div class="attack-summary">
+                <span class="attack-name">{{ attack.name }}</span>
+                <div class="attack-actions">
+                  <button type="button" class="btn-small btn-edit" (click)="startEditingAttack(i)">
+                    編集
+                  </button>
+                  <button type="button" class="btn-small btn-delete" (click)="deleteAttack(i)">
+                    削除
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          @if (!isEditingAttack && (!formData.attacks || formData.attacks.length < 2)) {
+            <button type="button" class="btn btn-secondary" (click)="startAddingAttack()">
+              ワザを追加
+            </button>
+          }
+        </div>
+
+        <!-- ワザ編集フォーム -->
+        <!-- @if (isEditingAttack) { -->
+        <div class="attack-editor">
+          <h3>{{ editingAttackIndex !== null ? 'ワザを編集' : 'ワザを追加' }}</h3>
+
+          <!-- ワザ名 -->
+          <div class="form-group">
+            <label class="form-label">ワザ名</label>
+            <input
+              type="text"
+              class="form-input"
+              [(ngModel)]="tempAttack.name"
+              placeholder="例: ほのお"
+            />
+            <div class="sample-names">
+              サンプル:
+              <span
+                *ngFor="let sample of PRESETS.ATTACK_NAME_SAMPLES.slice(0, 6)"
+                class="sample-name"
+                (click)="tempAttack.name = sample"
+              >
+                {{ sample }}
+              </span>
+            </div>
+          </div>
+
+          <!-- エネルギーコスト -->
+          <div class="form-group">
+            <label class="form-label">エネルギーコスト</label>
+            <div *ngFor="let cost of tempAttack.energyCosts; let i = index" class="energy-cost-row">
+              <select class="form-select" [(ngModel)]="cost.type">
+                <option *ngFor="let type of PRESETS.ENERGY_TYPE_OPTIONS" [value]="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+              <select class="form-select-small" [(ngModel)]="cost.amount">
+                <option [value]="1">1個</option>
+                <option [value]="2">2個</option>
+                <option [value]="3">3個</option>
+              </select>
+              @if (tempAttack.energyCosts.length > 1) {
+                <button type="button" class="btn-icon btn-delete" (click)="removeEnergyCost(i)">
+                  ×
+                </button>
+              }
+            </div>
+            @if (tempAttack.energyCosts.length < 3) {
+              <button type="button" class="btn-small btn-secondary" (click)="addEnergyCost()">
+                + エネルギー追加
+              </button>
+            }
+          </div>
+
+          <!-- 効果 -->
+          <div class="form-group">
+            <label class="form-label">効果</label>
+            <div *ngFor="let effect of tempAttack.effects; let i = index" class="effect-row">
+              <select class="form-select" [(ngModel)]="effect.effectType">
+                <option *ngFor="let type of PRESETS.EFFECT_TYPE_OPTIONS" [value]="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+
+              <!-- ダメージ量 -->
+              @if (effect.effectType === 'DAMAGE') {
+                <select class="form-select-small" [(ngModel)]="effect.damageAmount">
+                  <option *ngFor="let damage of PRESETS.DAMAGE_OPTIONS" [value]="damage">
+                    {{ damage }}
+                  </option>
+                </select>
+              }
+
+              <!-- 回復量 -->
+              @if (effect.effectType === 'HEAL') {
+                <select class="form-select-small" [(ngModel)]="effect.healAmount">
+                  <option *ngFor="let heal of PRESETS.HEAL_OPTIONS" [value]="heal">
+                    {{ heal }}
+                  </option>
+                </select>
+              }
+
+              <!-- ドロー枚数 -->
+              @if (effect.effectType === 'DRAW') {
+                <select class="form-select-small" [(ngModel)]="effect.drawAmount">
+                  <option *ngFor="let draw of PRESETS.DRAW_OPTIONS" [value]="draw">
+                    {{ draw }}枚
+                  </option>
+                </select>
+              }
+
+              @if (tempAttack.effects.length > 1) {
+                <button type="button" class="btn-icon btn-delete" (click)="removeEffect(i)">
+                  ×
+                </button>
+              }
+            </div>
+            <button type="button" class="btn-small btn-secondary" (click)="addEffect()">
+              + 効果追加
+            </button>
+          </div>
+
+          <!-- ワザ保存ボタン -->
+          <div class="attack-editor-actions">
+            <button type="button" class="btn btn-primary" (click)="saveAttack()">
+              {{ editingAttackIndex !== null ? 'ワザを更新' : 'ワザを保存' }}
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="cancelAttackEdit()">
+              キャンセル
+            </button>
+          </div>
+        </div>
+        <!-- } -->
+      }
+
+      <!-- トレーナーズカード -->
+      @if (formData.cardType === 'TRAINER') {
+        <div class="form-group">
+          <label class="form-label">カード名 *</label>
+          <input class="form-input" type="text" [formControl]="nameCtrl" placeholder="例: サトシ" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">効果の説明 *</label>
+          <input
+            class="form-input"
+            type="text"
+            [formControl]="nameCtrl"
+            placeholder="例: 山札を3枚引く"
+          />
+        </div>
+
+        <!-- カードの効果 -->
+        <div class="form-group">
+          <label class="form-label">カードの効果 *</label>
+          <select class="form-select" [(ngModel)]="formData.target1">
+            @for (type of PRESETS.EFFECT_TYPE_OPTIONS; track type) {
+              <option [value]="type.value">
+                {{ type.label }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <!-- 効果の対象 -->
+        <div class="form-group">
+          <label class="form-label">効果の対象1 *</label>
+          <select class="form-select" [(ngModel)]="formData.target1">
+            @for (type of PRESETS.TARGET1; track type) {
+              <option [value]="type.value">
+                {{ type.label }}
+              </option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">効果の対象2 *</label>
+          <select class="form-select" [(ngModel)]="formData.target2">
+            @for (type of PRESETS.TARGET2; track type) {
+              <option [value]="type.value">
+                {{ type.label }}
+              </option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">効果の対象3 *</label>
+          <select class="form-select" [(ngModel)]="formData.target3">
+            @for (type of PRESETS.TARGET3; track type) {
+              <option [value]="type.value">
+                {{ type.label }}
+              </option>
+            }
+          </select>
+        </div>
+      }
+
+      <!-- エネルギーカード -->
+      @if (formData.cardType === 'ENERGY') {
+        <div class="form-group">
+          <label class="form-label">カード名 *</label>
+          <input
+            class="form-input"
+            type="text"
+            [formControl]="nameCtrl"
+            placeholder="例: ミストエネルギー"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">カードの効果 *</label>
+          <select class="form-select" [(ngModel)]="formData.energyType">
+            <option *ngFor="let type of PRESETS.ENERGY_TYPE_OPTIONS" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+      }
+
+      <!-- 作成ボタン -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-primary btn-large"
+          [disabled]="!canCreateCard"
+          (click)="createCard()"
+        >
+          カードを作成
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="resetForm()">リセット</button>
+      </div>
+    </div>
+
+    <!-- 右側：作成済みカード一覧 -->
+    <div class="cards-list-section">
+      <h2>作成したカード ({{ customCards.length }}枚)</h2>
+
+      @if (customCards.length === 0) {
+        <div class="empty-message">まだカードが作成されていません</div>
+      }
+
+      <div class="cards-grid">
+        <div *ngFor="let card of customCards" class="custom-card">
+          <div class="card-header">
+            <span class="card-name">{{ card.name }}</span>
+            <span class="card-type-badge" [class.pokemon]="card.type === 'POKEMON'">
+              {{ card.type === 'POKEMON' ? 'ポケモン' : 'エネルギー' }}
+            </span>
+          </div>
+
+          <div class="card-body">
+            <!-- ポケモンカードの詳細 -->
+            @if (card.type === 'POKEMON') {
+              <div>
+                <p><strong>HP:</strong> {{ card.hp }}</p>
+                <p><strong>タイプ:</strong> {{ getEnergyTypeName(card.energyType) }}</p>
+                <p><strong>逃げる:</strong> {{ card.retreatCost }}</p>
+                <div class="card-attacks">
+                  <strong>ワザ:</strong>
+                  <ul>
+                    <li *ngFor="let attack of card.attacks">
+                      {{ attack.name }}
+                      <span class="attack-effects"> ({{ attack.effects.length }}個の効果) </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            }
+
+            <!-- エネルギーカードの詳細 -->
+            @if (card.type === 'ENERGY') {
+              <div>
+                <p><strong>タイプ:</strong> {{ getEnergyTypeName(card.energyType) }}</p>
+              </div>
+            }
+          </div>
+
+          <div class="card-actions">
+            <button type="button" class="btn-small btn-delete" (click)="deleteCard(card.id)">
+              削除
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
