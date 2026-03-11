@@ -1,14 +1,9 @@
-# requirements.txt
-
 # Webスクレイピング
 selenium==4.16.0
 webdriver-manager==4.0.1
 beautifulsoup4==4.12.2
 requests==2.31.0
 lxml==5.1.0
-
-# 画像処理（エラーが出るのでスキップ）
-# Pillow==10.2.0
 
 # バックエンドAPI
 fastapi==0.109.0
@@ -29,4 +24,4 @@ python-dotenv==1.0.0
 stable-baselines3==2.3.2
 gymnasium==0.29.1
 torch==2.9.0
-numpy==1.26.4
+numpy==2.1.0
