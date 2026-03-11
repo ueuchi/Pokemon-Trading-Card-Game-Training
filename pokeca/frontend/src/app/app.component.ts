@@ -25,6 +25,21 @@ import { CardViewerComponent } from './components/card-viewer/card-viewer.compon
 export class AppComponent {
   currentView: 'game' | 'creator' | 'deck' | 'cards' = 'cards';
   title = 'card-game-engine';
+
+  private static readonly VIEW_KEY = 'pokeca_currentView';
+  private static readonly VALID_VIEWS = ['game', 'creator', 'deck', 'cards'];
+
+  constructor() {
+    const saved = localStorage.getItem(AppComponent.VIEW_KEY);
+    if (saved && AppComponent.VALID_VIEWS.includes(saved)) {
+      this.currentView = saved as typeof this.currentView;
+    }
+  }
+
+  switchView(view: typeof this.currentView): void {
+    this.currentView = view;
+    localStorage.setItem(AppComponent.VIEW_KEY, view);
+  }
 }
 
 // import { Component } from '@angular/core';

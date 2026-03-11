@@ -4,7 +4,8 @@
  * UIでカードを作成するための選択肢と設定
  */
 
-import { EnergyType, Effect, Target1, Target2, Target3 } from './game-state.types';
+import { EnergyType } from './game-state.types';
+// import { EnergyType, Effect, Target1, Target2, Target3 } from './game-state.types';
 
 /**
  * カード作成フォームのデータ
@@ -22,12 +23,17 @@ export interface CardCreationForm {
   hp?: number;
   energyType?: EnergyType;
   retreatCost?: number;
-  target1?: Target1;
-  target2?: Target2;
-  target3?: Target3;
+  // target1?: Target1;
+  // target2?: Target2;
+  // target3?: Target3;
 
   // ワザ（最大2個）
   attacks?: AttackCreationForm[];
+
+  // 効果のターゲット（トレーナーカード用）
+  target1?: string;
+  target2?: string;
+  target3?: string;
 }
 
 /**

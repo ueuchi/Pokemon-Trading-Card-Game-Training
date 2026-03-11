@@ -95,7 +95,6 @@ export class CardCreatorService {
       id: cardId,
       name: formData.name,
       type: 'POKEMON',
-      evolution: 'BASIC',
       hp: formData.hp || 50,
       energyType: formData.energyType || 'COLORLESS',
       retreatCost: formData.retreatCost || 1,

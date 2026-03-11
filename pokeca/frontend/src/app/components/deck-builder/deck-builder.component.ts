@@ -7,8 +7,14 @@ import { DeckService } from '../../game/services/deck.service';
 import { DeckBuilderService } from '../../game/services/deck-builder.service';
 import { PokemonCard, getCardCategoryLabel, getTypeColor } from '../../models/card.model';
 import {
-  Deck, EditingDeck, DECK_CONSTRAINTS,
-  newEditingDeck, toEditingDeck, toSaveRequest, getCardFilterCategory, isBasicEnergy,
+  Deck,
+  EditingDeck,
+  DECK_CONSTRAINTS,
+  newEditingDeck,
+  toEditingDeck,
+  toSaveRequest,
+  getCardFilterCategory,
+  isBasicEnergy,
 } from '../../game/types/deck.types';
 
 type FilterType = 'ALL' | 'POKEMON' | 'TRAINER' | 'ENERGY';
@@ -56,8 +62,13 @@ export class DeckBuilderComponent implements OnInit {
 
   loadDecks(): void {
     this.deckService.getDecks().subscribe({
-      next: (decks) => { this.savedDecks = decks; },
-      error: () => { this.errorMessage = 'デッキの取得に失敗しました'; },
+      next: (decks) => {
+        this.savedDecks = decks ?? [];
+      },
+      error: (err) => {
+        console.error('デッキ取得エラー:', err);
+        this.errorMessage = 'デッキの取得に失敗しました';
+      },
     });
   }
 
@@ -129,12 +140,19 @@ export class DeckBuilderComponent implements OnInit {
 
   saveDeck(): void {
     if (!this.currentDeck) return;
+    const trimmedName = this.currentDeck.name.trim();
+    if (!trimmedName) {
+      alert('デッキ名を入力してください');
+      return;
+    }
+    this.currentDeck.name = trimmedName;
     this.isSaving = true;
     const req = toSaveRequest(this.currentDeck);
 
-    const obs = this.currentDeck.id != null
-      ? this.deckService.updateDeck(this.currentDeck.id, req)
-      : this.deckService.createDeck(req as any);
+    const obs =
+      this.currentDeck.id != null
+        ? this.deckService.updateDeck(this.currentDeck.id, req)
+        : this.deckService.createDeck(req);
 
     obs.subscribe({
       next: () => {
@@ -157,8 +175,12 @@ export class DeckBuilderComponent implements OnInit {
   deleteDeck(id: number): void {
     if (!confirm('このデッキを削除しますか？')) return;
     this.deckService.deleteDeck(id).subscribe({
-      next: () => { this.loadDecks(); },
-      error: () => { alert('削除に失敗しました'); },
+      next: () => {
+        this.loadDecks();
+      },
+      error: () => {
+        alert('削除に失敗しました');
+      },
     });
   }
 
@@ -168,7 +190,7 @@ export class DeckBuilderComponent implements OnInit {
     let cards = this.allCards;
     if (this.filterType !== 'ALL') {
       cards = cards.filter(
-        (c) => getCardFilterCategory(c.evolution_stage) === this.filterType,
+        (c) => getCardFilterCategory(c.evolution_stage, c.card_type) === this.filterType,
       );
     }
     if (this.searchQuery.trim()) {
@@ -213,22 +235,22 @@ export class DeckBuilderComponent implements OnInit {
       if (card) entries.push({ card, count });
     });
     return entries.sort((a, b) => {
-      const catOrder = { 'POKEMON': 0, 'TRAINER': 1, 'ENERGY': 2, 'OTHER': 3 };
-      const oa = catOrder[getCardFilterCategory(a.card.evolution_stage)];
-      const ob = catOrder[getCardFilterCategory(b.card.evolution_stage)];
+      const catOrder = { POKEMON: 0, TRAINER: 1, ENERGY: 2, OTHER: 3 };
+      const oa = catOrder[getCardFilterCategory(a.card.evolution_stage, a.card.card_type)];
+      const ob = catOrder[getCardFilterCategory(b.card.evolution_stage, b.card.card_type)];
       return oa - ob || a.card.name.localeCompare(b.card.name, 'ja');
     });
   }
 
   /** savedDecks用カウント */
   getDeckCounts(deck: Deck) {
-    const energyTotal = Object.values(deck.energies).reduce((s, n) => s + n, 0);
-    const counts = this.deckBuilderService.getCategoryCounts(deck.cards);
+    const energyTotal = Object.values(deck.energies ?? {}).reduce((s, n) => s + n, 0);
+    const counts = this.deckBuilderService.getCategoryCounts(deck.cards ?? []);
     return { ...counts, energy: energyTotal };
   }
 
-  getCategoryLabel(stage: string | null): string {
-    return getCardCategoryLabel(stage);
+  getCategoryLabel(stage: string | null, cardType?: string | null): string {
+    return getCardCategoryLabel(stage, cardType);
   }
 
   getTypeColor(type: string | null): string {

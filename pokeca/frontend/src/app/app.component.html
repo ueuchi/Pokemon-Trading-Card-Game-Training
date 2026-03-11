@@ -24,28 +24,28 @@
         <button
           class="nav-link"
           [class.active]="currentView === 'game'"
-          (click)="currentView = 'game'"
+          (click)="switchView('game')"
         >
           ゲーム
         </button>
         <button
           class="nav-link"
           [class.active]="currentView === 'creator'"
-          (click)="currentView = 'creator'"
+          (click)="switchView('creator')"
         >
           カード作成
         </button>
         <button
           class="nav-link"
           [class.active]="currentView === 'deck'"
-          (click)="currentView = 'deck'"
+          (click)="switchView('deck')"
         >
           デッキ作成
         </button>
         <button
           class="nav-link"
           [class.active]="currentView === 'cards'"
-          (click)="currentView = 'cards'"
+          (click)="switchView('cards')"
         >
           カード一覧
         </button>

@@ -6,7 +6,7 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.card import PokemonCard, Attack, Weakness
+from models.card import PokemonCard, Attack
 from engine.setup.game_setup import setup_game, place_initial_pokemon, start_game
 from engine.turn.turn_manager import begin_turn, end_turn
 from engine.actions.attach_energy import attach_energy
@@ -21,7 +21,7 @@ def make_pikachu(card_id):
         id=card_id, name="ピカチュウ", hp=70, type="雷",
         evolution_stage="たね",
         attacks=[Attack(name="でんきショック", energy=["雷"], energy_count=1, damage=20, description="")],
-        weakness=Weakness(type="闘", value="×2"),
+        weakness="闘",
         resistance=None, retreat_cost=1,
     )
 
@@ -31,7 +31,7 @@ def make_hitokage(card_id):
         evolution_stage="たね",
         attacks=[Attack(name="ひっかく", energy=["無色"], energy_count=1, damage=10, description=""),
                  Attack(name="かえんほうしゃ", energy=["炎", "炎"], energy_count=2, damage=40, description="")],
-        weakness=Weakness(type="水", value="×2"),
+        weakness="水",
         resistance=None, retreat_cost=1,
     )
 

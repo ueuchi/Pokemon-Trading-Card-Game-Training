@@ -1,5 +1,4 @@
 <div class="card-list-container">
-
   <!-- フィルターバー -->
   <div class="filter-bar">
     <div class="filter-row">
@@ -11,11 +10,7 @@
         (ngModelChange)="applyFilter()"
       />
 
-      <select
-        class="type-select"
-        [(ngModel)]="filterType"
-        (ngModelChange)="applyFilter()"
-      >
+      <select class="type-select" [(ngModel)]="filterType" (ngModelChange)="applyFilter()">
         <option value="">タイプ：すべて</option>
         <option *ngFor="let t of cardTypes" [value]="t">{{ t }}</option>
       </select>
@@ -28,9 +23,7 @@
         リセット
       </button>
 
-      <button class="btn btn-secondary btn-sm" (click)="loadCards()">
-        再読み込み
-      </button>
+      <button class="btn btn-secondary btn-sm" (click)="loadCards()">再読み込み</button>
     </div>
 
     <p class="result-count" *ngIf="!isLoading">
@@ -51,12 +44,7 @@
 
   <!-- カードグリッド -->
   <div class="card-grid" *ngIf="!isLoading && !errorMessage">
-
-    <div
-      *ngFor="let card of filteredCards"
-      class="card-item"
-      (click)="selectCard(card)"
-    >
+    <div *ngFor="let card of filteredCards" class="card-item" (click)="selectCard(card)">
       <!-- カード画像 or プレースホルダー -->
       <div class="card-image-wrap">
         <img
@@ -64,33 +52,36 @@
           [src]="card.image_url"
           [alt]="card.name"
           class="card-image"
-          (error)="$any($event.target).style.display='none'"
+          (error)="$any($event.target).style.display = 'none'"
         />
         <div
           *ngIf="!card.image_url"
           class="card-image-placeholder"
-          [style.background]="getTypeColor(card.type)"
+          [style.background]="getTypeColor(getDisplayType(card))"
         >
           <span class="placeholder-name">{{ card.name }}</span>
         </div>
 
         <!-- タイプバッジ -->
-        <span
-          class="type-badge"
-          [style.background]="getTypeColor(card.type)"
-        >{{ card.type ?? '—' }}</span>
+        <span class="type-badge" [style.background]="getTypeColor(getDisplayType(card))">{{
+          getDisplayType(card) ?? '—'
+        }}</span>
       </div>
 
       <!-- カード情報 -->
       <div class="card-info">
         <p class="card-name">{{ card.name }}</p>
         <div class="card-meta">
-          <span class="meta-category">{{ getCategoryLabel(card.evolution_stage) }}</span>
+          <span class="meta-category">{{ getCategoryLabel(card) }}</span>
           <span class="meta-stage" *ngIf="card.evolution_stage">{{ card.evolution_stage }}</span>
         </div>
         <div class="card-stats" *ngIf="card.hp">
           <span class="hp-label">HP</span>
           <span class="hp-value">{{ card.hp }}</span>
+        </div>
+        <div class="card-weakness" *ngIf="card.weakness">
+          <span class="weakness-label">弱点</span>
+          <span class="weakness-chip" [style.background]="getTypeColor(card.weakness)">{{ card.weakness }}</span>
         </div>
         <p class="attacks-label" *ngIf="card.attacks.length">
           {{ getAttackNames(card) }}
@@ -102,6 +93,5 @@
     <div class="no-data" *ngIf="filteredCards.length === 0">
       <p>カードが見つかりません</p>
     </div>
-
   </div>
 </div>

@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
 import { PokemonCard } from '../../models/card.model';
 import {
-  EditingDeck, DECK_CONSTRAINTS, getTotalCount, getCardFilterCategory, isBasicEnergy,
+  EditingDeck,
+  DECK_CONSTRAINTS,
+  getTotalCount,
+  getCardFilterCategory,
+  isBasicEnergy,
 } from '../types/deck.types';
 
 @Injectable({ providedIn: 'root' })
 export class DeckBuilderService {
-
   /** カードをデッキに1枚追加。成功したら true を返す */
   addCard(deck: EditingDeck, card: PokemonCard): boolean {
     const current = deck.cardCounts.get(card.id) ?? 0;
@@ -51,10 +54,17 @@ export class DeckBuilderService {
 
     const total = getTotalCount(deck);
     if (total > DECK_CONSTRAINTS.TOTAL_CARDS) {
-      errors.push(`デッキは${DECK_CONSTRAINTS.TOTAL_CARDS}枚以内にしてください（現在: ${total}枚）`);
+      errors.push(
+        `デッキは${DECK_CONSTRAINTS.TOTAL_CARDS}枚以内にしてください（現在: ${total}枚）`,
+      );
     }
     if (total < DECK_CONSTRAINTS.TOTAL_CARDS) {
-      warnings.push(`あと${DECK_CONSTRAINTS.TOTAL_CARDS - total}枚追加できます`);
+      warnings.push(
+        `あと${DECK_CONSTRAINTS.TOTAL_CARDS - total}枚追加できます（現在: ${total}枚）`,
+      );
+    }
+    if (total === 0) {
+      errors.push('カードが1枚も入っていません');
     }
 
     // たねポケモンが1枚以上必要
@@ -63,19 +73,29 @@ export class DeckBuilderService {
       if (card.evolution_stage === 'たね') hasBasic = true;
     });
     if (!hasBasic && total > 0) {
-      errors.push('たねポケモンが1枚も入っていません');
+      warnings.push('たねポケモンが1枚も入っていません（対戦では必要です）');
     }
 
-    return { valid: errors.length === 0 && total === DECK_CONSTRAINTS.TOTAL_CARDS, errors, warnings };
+    return {
+      valid: errors.length === 0 && total > 0,
+      errors,
+      warnings,
+    };
   }
 
   /** デッキのカード種別カウント（一覧表示用） */
-  getCategoryCounts(cards: { evolution_stage: string | null; count: number }[]): {
-    pokemon: number; trainer: number; energy: number;
+  getCategoryCounts(
+    cards: { evolution_stage: string | null; card_type?: string | null; count: number }[],
+  ): {
+    pokemon: number;
+    trainer: number;
+    energy: number;
   } {
-    let pokemon = 0, trainer = 0, energy = 0;
-    cards.forEach(({ evolution_stage, count }) => {
-      const cat = getCardFilterCategory(evolution_stage);
+    let pokemon = 0,
+      trainer = 0,
+      energy = 0;
+    cards.forEach(({ evolution_stage, card_type, count }) => {
+      const cat = getCardFilterCategory(evolution_stage, card_type);
       if (cat === 'POKEMON') pokemon += count;
       else if (cat === 'TRAINER') trainer += count;
       else if (cat === 'ENERGY') energy += count;

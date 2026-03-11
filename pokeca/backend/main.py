@@ -1,13 +1,16 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from typing import List
 import sqlite3
+import os
 
 from models.card import PokemonCard, CardCreateRequest, CardUpdateRequest
 from database.connection import get_db_connection
 from repositories.card_repository import CardRepository
 from api.deck import router as decks_router, init_deck_tables
+from api.game import router as game_router
 
 
 # 起動・終了時の処理
@@ -35,6 +38,12 @@ app = FastAPI(
 )
 
 app.include_router(decks_router)
+app.include_router(game_router)
+
+# 静的ファイル配信（スクレイピングした画像など）
+_data_dir = os.path.join(os.path.dirname(__file__), "data")
+if os.path.isdir(_data_dir):
+    app.mount("/static", StaticFiles(directory=_data_dir), name="static")
 
 # CORS設定（Angular開発サーバーからのアクセスを許可）
 app.add_middleware(

@@ -13,6 +13,7 @@ export interface DeckCardEntry {
   type: string | null;
   evolution_stage: string | null;
   image_url: string | null;
+  card_type: string | null;
 }
 
 /** デッキ（APIレスポンス用） */
@@ -20,7 +21,7 @@ export interface Deck {
   id: number;
   name: string;
   description: string;
-  energies: Record<string, number>;  // {"草": 10, "炎": 6}
+  energies: Record<string, number>; // {"草": 10, "炎": 6}
   created_at: string;
   total_count: number;
   cards: DeckCardEntry[];
@@ -59,15 +60,21 @@ export const DECK_CONSTRAINTS = {
   MAX_SAME_CARD: 4,
 } as const;
 
-/** 基本エネルギーかどうかを判定（id が負数 = フロントエンドの固定データ） */
+/** エネルギーカードかどうかを判定（枚数制限なし対象） */
 export function isBasicEnergy(card: PokemonCard): boolean {
-  return card.evolution_stage === 'エネルギー';
+  return card.card_type === 'energy' || card.evolution_stage === 'エネルギー';
 }
 
-/** evolution_stage からフィルター用カテゴリを返す */
+/** evolution_stage / card_type からフィルター用カテゴリを返す */
 export function getCardFilterCategory(
-  stage: string | null
+  stage: string | null,
+  cardType?: string | null,
 ): 'POKEMON' | 'TRAINER' | 'ENERGY' | 'OTHER' {
+  if (cardType === 'energy') return 'ENERGY';
+  if (cardType === 'trainer') return 'TRAINER';
+  if (cardType === 'pokemon') {
+    if (!stage) return 'POKEMON';
+  }
   if (!stage) return 'OTHER';
   if (['たね', '1 進化', '2 進化'].includes(stage)) return 'POKEMON';
   if (['サポート', 'グッズ', 'スタジアム'].includes(stage)) return 'TRAINER';
@@ -78,7 +85,9 @@ export function getCardFilterCategory(
 /** EditingDeck の合計枚数を返す */
 export function getTotalCount(deck: EditingDeck): number {
   let total = 0;
-  deck.cardCounts.forEach((count) => { total += count; });
+  deck.cardCounts.forEach((count) => {
+    total += count;
+  });
   return total;
 }
 
@@ -93,9 +102,9 @@ export function toSaveRequest(deck: EditingDeck): DeckCreateRequest {
   deck.cardCounts.forEach((count, card_id) => {
     if (count <= 0) return;
     const card = deck.cardMap.get(card_id);
-    if (isBasicEnergy(card!)) {
-      // 基本エネルギー → energies に集約
-      if (card!.type) energies[card!.type] = count;
+    if (card && card.id < 0 && card.evolution_stage === 'エネルギー') {
+      // 負のID（ハードコードの基本エネルギー） → energies に集約
+      if (card.type) energies[card.type] = count;
     } else {
       cards.push({ card_id, count });
     }
@@ -108,13 +117,15 @@ export function toSaveRequest(deck: EditingDeck): DeckCreateRequest {
 export function toEditingDeck(
   deck: Deck,
   allCards: PokemonCard[],
-  basicEnergies: PokemonCard[]
+  basicEnergies: PokemonCard[],
 ): EditingDeck {
   const apiCardMap = new Map<number, PokemonCard>();
   allCards.forEach((c) => apiCardMap.set(c.id, c));
 
   const energyByType = new Map<string, PokemonCard>();
-  basicEnergies.forEach((e) => { if (e.type) energyByType.set(e.type, e); });
+  basicEnergies.forEach((e) => {
+    if (e.type) energyByType.set(e.type, e);
+  });
 
   const cardCounts = new Map<number, number>();
   const cardMap = new Map<number, PokemonCard>();

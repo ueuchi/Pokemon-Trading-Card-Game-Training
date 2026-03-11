@@ -36,7 +36,7 @@ def use_supporter(game_state: GameState, player_id: str, card_id: int) -> dict:
         return {"success": False, "message": f"手札にカードID={card_id}が見つかりません"}
 
     # 手札から取り出してトラッシュへ
-    player.hand = [c for c in player.hand if c.id != card_id]
+    player.hand = [c for c in player.hand if c.uid != card.uid]
     player.discard_pile.append(card)
     player.supporter_used_this_turn = True
 
@@ -63,7 +63,7 @@ def use_goods(game_state: GameState, player_id: str, card_id: int) -> dict:
     if card is None:
         return {"success": False, "message": f"手札にカードID={card_id}が見つかりません"}
 
-    player.hand = [c for c in player.hand if c.id != card_id]
+    player.hand = [c for c in player.hand if c.uid != card.uid]
     player.discard_pile.append(card)
 
     game_state.add_log("USE_GOODS", f"{player_id}: {card.name}を使用（効果はPhase 11で実装）")
@@ -98,7 +98,7 @@ def use_stadium(game_state: GameState, player_id: str, card_id: int) -> dict:
         old_owner.discard_pile.append(old_card)
 
     # 新しいスタジアムを場に出す
-    player.hand = [c for c in player.hand if c.id != card_id]
+    player.hand = [c for c in player.hand if c.uid != card.uid]
     game_state.stadium = StadiumState(card=card, played_by=player_id)
 
     detail = f"{player_id}: {card.name}をスタジアムに設置"
@@ -111,6 +111,6 @@ def use_stadium(game_state: GameState, player_id: str, card_id: int) -> dict:
 
 def _find_card_in_hand(player, card_id: int):
     for card in player.hand:
-        if card.id == card_id:
+        if card.uid == card_id:
             return card
     return None

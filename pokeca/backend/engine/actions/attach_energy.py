@@ -40,7 +40,7 @@ def attach_energy(
     # 手札からエネルギーカードを探す
     energy_card = None
     for card in player.hand:
-        if card.id == energy_card_id:
+        if card.uid == energy_card_id:
             energy_card = card
             break
 
@@ -66,7 +66,7 @@ def attach_energy(
 
     # エネルギーを付与
     pokemon.attached_energy.append(energy_type)
-    player.hand = [c for c in player.hand if c.id != energy_card_id]
+    player.hand = [c for c in player.hand if c.uid != energy_card.uid]
     player.discard_pile.append(energy_card)
     player.energy_attached_this_turn = True
 

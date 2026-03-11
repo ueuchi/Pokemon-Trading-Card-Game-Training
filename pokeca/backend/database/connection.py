@@ -23,6 +23,10 @@ def get_db_connection() -> Generator[sqlite3.Connection, None, None]:
     conn.row_factory = sqlite3.Row  # 辞書形式でアクセス可能にする
     try:
         yield conn
+        conn.commit()       # 正常終了時にコミット
+    except Exception:
+        conn.rollback()     # 例外発生時にロールバック
+        raise
     finally:
         conn.close()
 

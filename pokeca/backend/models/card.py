@@ -1,104 +1,131 @@
 """
-データベースモデル定義
-pydanticがある場合はBaseModel、なければdataclassにフォールバック
+カードモデル定義（更新版 - dataclass使用）
+Pydantic非依存のdataclassで定義する
 """
-from typing import Optional, List
+from dataclasses import dataclass, field
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel
 
-try:
-    from pydantic import BaseModel
-    from datetime import datetime
 
-    class Attack(BaseModel):
-        name: str
-        energy: List[str]
-        energy_count: int
-        damage: int
-        description: str
+@dataclass
+class EffectStep:
+    """
+    1つの原子効果を表すデータ構造。
+    複数の EffectStep を組み合わせて1ワザの効果全体を表現する。
 
-    class Weakness(BaseModel):
-        type: str
-        value: str
+    params の主なキー（effect_type ごと）:
+      bench_damage:   { "damage": int, "target": "single"|"all" }
+      self_damage:    { "damage": int }
+      damage_reduce:  { "value": int }
+      heal_self:      { "hp": int }
+      heal_bench:     { "hp": int, "filter_type": str|None }
+      draw:           { "count": int }
+      discard_hand:   { "count": int, "optional": bool }
+      search_energy:  { "energy_type": str|None, "to": "bench"|"hand" }
+      attach_energy:  { "from": "hand"|"deck" }
+      discard_energy: { "count": int, "from": "self"|"opponent" }
+      coin_flip:      { "on_heads": EffectStep|None, "on_tails": EffectStep|None }
+      custom:         { "id": str }
+    """
+    type: str
+    params: Dict[str, Any] = field(default_factory=dict)
 
-    class Resistance(BaseModel):
-        type: str
-        value: str
 
-    class PokemonCard(BaseModel):
-        id: Optional[int] = None
-        name: str
-        image_url: Optional[str] = None
-        list_index: Optional[int] = None
-        hp: Optional[int] = None
-        type: Optional[str] = None
-        evolution_stage: Optional[str] = None
-        attacks: List[Attack] = []
-        weakness: Optional[Weakness] = None
-        resistance: Optional[Resistance] = None
-        retreat_cost: Optional[int] = None
-        created_at: Optional[datetime] = None
-        class Config:
-            from_attributes = True
+@dataclass
+class Attack:
+    name: str
+    energy: List[str] = field(default_factory=list)
+    energy_count: int = 0
+    damage: int = 0
+    description: str = ""
+    effect_steps: List[EffectStep] = field(default_factory=list)
 
-    class CardCreateRequest(BaseModel):
-        name: str
-        image_url: str
-        hp: int
-        type: str
-        evolution_stage: str
-        attacks: List[Attack]
-        weakness: Optional[Weakness] = None
-        resistance: Optional[Resistance] = None
-        retreat_cost: int
 
-    class CardUpdateRequest(BaseModel):
-        name: Optional[str] = None
-        image_url: Optional[str] = None
-        hp: Optional[int] = None
-        type: Optional[str] = None
-        evolution_stage: Optional[str] = None
-        attacks: Optional[List[Attack]] = None
-        weakness: Optional[Weakness] = None
-        resistance: Optional[Resistance] = None
-        retreat_cost: Optional[int] = None
+@dataclass
+class Ability:
+    name: str
+    description: str = ""
 
-except ImportError:
-    from dataclasses import dataclass, field
 
-    @dataclass
-    class Attack:
-        name: str = ""
-        energy: List = field(default_factory=list)
-        energy_count: int = 0
-        damage: int = 0
-        description: str = ""
+@dataclass
+class Resistance:
+    type: str
+    value: int = -30
 
-    @dataclass
-    class Weakness:
-        type: str = ""
-        value: str = ""
 
-    @dataclass
-    class Resistance:
-        type: str = ""
-        value: str = ""
+@dataclass
+class PokemonCard:
+    id: int
+    name: str
+    card_type: str = "pokemon"
 
-    @dataclass
-    class PokemonCard:
-        id: Optional[int] = None
-        name: str = ""
-        image_url: Optional[str] = None
-        list_index: Optional[int] = None
-        hp: Optional[int] = None
-        type: Optional[str] = None
-        evolution_stage: Optional[str] = None
-        attacks: List = field(default_factory=list)
-        weakness: Optional[object] = None
-        resistance: Optional[object] = None
-        retreat_cost: Optional[int] = None
-        created_at: Optional[str] = None
+    # デッキ内のユニークインスタンスID（同名カードを区別するため）
+    uid: int = 0
 
-    class CardCreateRequest:
-        pass
+    # ポケモン固有
+    pokemon_type: str = "normal"          # "normal" | "trainer_pokemon"
+    card_rule: Optional[str] = None       # None | "ex" | "mega_ex"
+    evolution_stage: Optional[str] = None # "たね" | "1進化" | "2進化"
+    evolves_from: Optional[str] = None
+    hp: Optional[int] = None
+    type: Optional[str] = None
+    attacks: List[Attack] = field(default_factory=list)
+    ability: Optional[Ability] = None
+    weakness: Optional[str] = None        # 弱点タイプ文字列（例: "炎"）
+    resistance: Optional[Resistance] = None
+    retreat_cost: int = 0
 
-    class CardUpdateRequest:
-        pass
+    # エネルギー固有
+    energy_type: Optional[str] = None    # "basic" | "special"
+
+    # トレーナー固有
+    trainer_type: Optional[str] = None   # "supporter" | "goods" | "stadium"
+    is_ace_spec: bool = False
+    effect_description: Optional[str] = None
+
+    # 共通
+    image_url: Optional[str] = None
+
+
+# ==================== Pydanticリクエストモデル ====================
+
+class CardCreateRequest(BaseModel):
+    """カード作成リクエスト"""
+    name: str
+    card_type: str = "pokemon"
+    image_url: Optional[str] = None
+    hp: Optional[int] = None
+    type: Optional[str] = None
+    evolution_stage: Optional[str] = None
+    evolves_from: Optional[str] = None
+    retreat_cost: int = 0
+    pokemon_type: str = "normal"
+    card_rule: Optional[str] = None
+    energy_type: Optional[str] = None
+    trainer_type: Optional[str] = None
+    is_ace_spec: bool = False
+    effect_description: Optional[str] = None
+
+    class Config:
+        extra = "allow"
+
+
+class CardUpdateRequest(BaseModel):
+    """カード更新リクエスト（全フィールド任意）"""
+    name: Optional[str] = None
+    card_type: Optional[str] = None
+    image_url: Optional[str] = None
+    hp: Optional[int] = None
+    type: Optional[str] = None
+    evolution_stage: Optional[str] = None
+    evolves_from: Optional[str] = None
+    retreat_cost: Optional[int] = None
+    pokemon_type: Optional[str] = None
+    card_rule: Optional[str] = None
+    energy_type: Optional[str] = None
+    trainer_type: Optional[str] = None
+    is_ace_spec: Optional[bool] = None
+    effect_description: Optional[str] = None
+
+    class Config:
+        extra = "allow"

@@ -30,20 +30,6 @@ class GameLog:
 class GameState:
     """
     ゲーム全体の状態を管理するクラス
-
-    Attributes:
-        game_id: ゲームの一意ID
-        player1: プレイヤー1の状態
-        player2: プレイヤー2の状態
-        current_turn: 現在のターン数（1始まり）
-        current_player_id: 現在のターンのプレイヤーID
-        first_player_id: 先行プレイヤーのID
-        game_phase: ゲーム全体のフェーズ
-        turn_phase: ターン内のフェーズ
-        winner_id: 勝者のプレイヤーID（ゲーム終了時にセット）
-        stadium: 現在場に出ているスタジアムカード
-        logs: ゲームログ
-        attacked_this_turn: このターンに攻撃宣言したか
     """
     player1: PlayerState
     player2: PlayerState
@@ -60,26 +46,21 @@ class GameState:
 
     @property
     def current_player(self) -> PlayerState:
-        """現在のターンのプレイヤー"""
         return self.player1 if self.current_player_id == "player1" else self.player2
 
     @property
     def opponent(self) -> PlayerState:
-        """現在のターンの相手プレイヤー"""
         return self.player2 if self.current_player_id == "player1" else self.player1
 
     @property
     def is_game_over(self) -> bool:
-        """ゲームが終了しているか"""
         return self.game_phase == GamePhase.GAME_OVER
 
     @property
     def is_first_turn(self) -> bool:
-        """先行プレイヤーの最初のターンか（攻撃禁止判定用）"""
         return self.current_turn == 1 and self.current_player_id == self.first_player_id
 
     def get_player(self, player_id: str) -> PlayerState:
-        """player_idでPlayerStateを取得"""
         if player_id == "player1":
             return self.player1
         elif player_id == "player2":
@@ -87,11 +68,9 @@ class GameState:
         raise ValueError(f"不明なプレイヤーID: {player_id}")
 
     def get_opponent_of(self, player_id: str) -> PlayerState:
-        """指定プレイヤーの相手を取得"""
         return self.player2 if player_id == "player1" else self.player1
 
     def add_log(self, action: str, detail: str = ""):
-        """ゲームログを追加"""
         log = GameLog(
             turn=self.current_turn,
             player_id=self.current_player_id,
@@ -101,23 +80,23 @@ class GameState:
         self.logs.append(log)
 
     def switch_turn(self):
-        """ターンを相手プレイヤーに移行"""
-        # 現在のプレイヤーの場のポケモンのturns_in_playをインクリメント
         self.current_player.increment_turns_in_play()
-
-        # プレイヤー切り替え
         self.current_player_id = (
             "player2" if self.current_player_id == "player1" else "player1"
         )
         self.current_turn += 1
         self.turn_phase = TurnPhase.DRAW
         self.attacked_this_turn = False
-
-        # 次のプレイヤーのターンフラグをリセット
         self.current_player.reset_turn_flags()
 
     def to_dict(self) -> dict:
         """ゲーム状態をAPI応答用の辞書形式に変換"""
+
+        def ability_to_dict(ability):
+            if ability is None:
+                return None
+            return {"name": ability.name, "description": ability.description}
+
         def pokemon_to_dict(p):
             if p is None:
                 return None
@@ -132,6 +111,11 @@ class GameState:
                 "turns_in_play": p.turns_in_play,
                 "evolution_stage": p.card.evolution_stage,
                 "type": p.card.type,
+                # 新フィールド
+                "pokemon_type": getattr(p.card, "pokemon_type", "normal"),
+                "card_rule": getattr(p.card, "card_rule", None),
+                "image_url": getattr(p.card, "image_url", None),
+                "ability": ability_to_dict(getattr(p.card, "ability", None)),
                 "attacks": [
                     {
                         "name": a.name,
@@ -143,16 +127,66 @@ class GameState:
                     for a in p.card.attacks
                 ],
                 "retreat_cost": p.card.retreat_cost,
-                "weakness": {"type": p.card.weakness.type, "value": p.card.weakness.value} if p.card.weakness else None,
+                "weakness": p.card.weakness,
                 "resistance": {"type": p.card.resistance.type, "value": p.card.resistance.value} if p.card.resistance else None,
             }
+
+        def hand_card_to_dict(c):
+            """手札カードの詳細情報（card_typeによって返すフィールドを変える）"""
+            base = {
+                "card_id": c.id,
+                "uid": getattr(c, "uid", 0),
+                "name": c.name,
+                "card_type": getattr(c, "card_type", "pokemon"),
+                "image_url": getattr(c, "image_url", None),
+            }
+            card_type = getattr(c, "card_type", "pokemon")
+
+            if card_type == "pokemon":
+                base.update({
+                    "evolution_stage": c.evolution_stage,
+                    "evolves_from": getattr(c, "evolves_from", None),
+                    "type": c.type,
+                    "hp": c.hp,
+                    "pokemon_type": getattr(c, "pokemon_type", "normal"),
+                    "card_rule": getattr(c, "card_rule", None),
+                    "energy_type": None,
+                    "trainer_type": None,
+                    "is_ace_spec": False,
+                })
+            elif card_type == "energy":
+                base.update({
+                    "evolution_stage": None,
+                    "evolves_from": None,
+                    "type": c.type,
+                    "hp": None,
+                    "pokemon_type": None,
+                    "card_rule": None,
+                    "energy_type": getattr(c, "energy_type", "basic"),
+                    "trainer_type": None,
+                    "is_ace_spec": False,
+                })
+            elif card_type == "trainer":
+                base.update({
+                    "evolution_stage": None,
+                    "evolves_from": None,
+                    "type": None,
+                    "hp": None,
+                    "pokemon_type": None,
+                    "card_rule": None,
+                    "energy_type": None,
+                    "trainer_type": getattr(c, "trainer_type", None),
+                    "is_ace_spec": getattr(c, "is_ace_spec", False),
+                })
+
+            return base
 
         def player_to_dict(ps: PlayerState):
             return {
                 "player_id": ps.player_id,
                 "deck_count": ps.deck_count,
                 "hand_count": len(ps.hand),
-                "hand": [{"card_id": c.id, "name": c.name, "evolution_stage": c.evolution_stage, "type": c.type} for c in ps.hand],
+                "hand": [hand_card_to_dict(c) for c in ps.hand],
                 "active_pokemon": pokemon_to_dict(ps.active_pokemon),
                 "bench": [pokemon_to_dict(b) for b in ps.bench],
                 "prize_remaining": ps.prize_remaining,
@@ -172,6 +206,12 @@ class GameState:
             "winner_id": self.winner_id,
             "is_first_turn": self.is_first_turn,
             "attacked_this_turn": self.attacked_this_turn,
+            # 新フィールド: コイントス結果とマリガン情報
+            "coin_toss_result": self.first_player_id,
+            "mulligan_info": {
+                "player1_mulligans": getattr(self.player1, "mulligans", 0),
+                "player2_mulligans": getattr(self.player2, "mulligans", 0),
+            },
             "stadium": {
                 "card_id": self.stadium.card.id,
                 "name": self.stadium.card.name,
@@ -181,6 +221,6 @@ class GameState:
             "player2": player_to_dict(self.player2),
             "logs": [
                 {"turn": l.turn, "player_id": l.player_id, "action": l.action, "detail": l.detail}
-                for l in self.logs[-20:]  # 直近20件のみ返す
+                for l in self.logs[-30:]
             ],
         }

@@ -92,7 +92,7 @@ def _fetch_deck(conn, deck_id: int) -> dict:
 
     cards = conn.execute("""
         SELECT dc.card_id, dc.count,
-               c.name, c.hp, c.type, c.evolution_stage, c.image_url
+               c.name, c.hp, c.type, c.evolution_stage, c.image_url, c.card_type
         FROM deck_cards dc
         JOIN cards c ON c.id = dc.card_id
         WHERE dc.deck_id = ?
@@ -119,14 +119,17 @@ def _fetch_deck(conn, deck_id: int) -> dict:
                 "type": r["type"],
                 "evolution_stage": r["evolution_stage"],
                 "image_url": r["image_url"],
+                "card_type": r["card_type"],
             }
             for r in cards
         ],
     }
 
 
-def _validate(cards: list[DeckCardEntry], energies: dict[str, int]) -> list[str]:
-    """バリデーション。エラーメッセージのリストを返す"""
+def _validate(cards: list[DeckCardEntry], energies: dict[str, int], conn=None) -> list[str]:
+    """バリデーション。エラーメッセージのリストを返す
+    conn が渡された場合、card_type='energy' のカードは枚数制限なしとして扱う。
+    """
     errors = []
     card_total = sum(c.count for c in cards)
     energy_total = sum(energies.values())
@@ -134,10 +137,22 @@ def _validate(cards: list[DeckCardEntry], energies: dict[str, int]) -> list[str]
 
     if total > TOTAL_CARDS:
         errors.append(f"デッキは{TOTAL_CARDS}枚以内にしてください（現在: {total}枚）")
+
+    # DB からエネルギーカードIDを取得（枚数制限なし対象）
+    energy_card_ids: set[int] = set()
+    if conn and cards:
+        card_ids = [c.card_id for c in cards]
+        placeholders = ','.join('?' * len(card_ids))
+        rows = conn.execute(
+            f"SELECT id FROM cards WHERE id IN ({placeholders}) AND card_type = 'energy'",
+            card_ids
+        ).fetchall()
+        energy_card_ids = {r['id'] for r in rows}
+
     for entry in cards:
         if entry.count < 1:
             errors.append(f"カードID {entry.card_id} の枚数が不正です")
-        elif entry.count > MAX_SAME_CARD:
+        elif entry.card_id not in energy_card_ids and entry.count > MAX_SAME_CARD:
             errors.append(
                 f"カードID {entry.card_id} は{MAX_SAME_CARD}枚まで入れられます（指定: {entry.count}枚）"
             )
@@ -161,11 +176,11 @@ async def create_deck(req: DeckCreateRequest):
     if not req.name.strip():
         raise HTTPException(status_code=400, detail="デッキ名は必須です")
 
-    errors = _validate(req.cards, req.energies)
-    if errors:
-        raise HTTPException(status_code=400, detail={"errors": errors})
-
     with get_db_connection() as conn:
+        errors = _validate(req.cards, req.energies, conn)
+        if errors:
+            raise HTTPException(status_code=400, detail={"errors": errors})
+
         cur = conn.execute(
             "INSERT INTO decks (name, description, energies) VALUES (?, ?, ?)",
             (req.name.strip(), req.description or '', json.dumps(req.energies, ensure_ascii=False))
@@ -213,7 +228,7 @@ async def update_deck(deck_id: int, req: DeckUpdateRequest):
                 conn.execute("SELECT energies FROM decks WHERE id = ?", (deck_id,))
                 .fetchone()["energies"] or '{}'
             )
-            errors = _validate(req.cards, req.energies or current_energies)
+            errors = _validate(req.cards, req.energies or current_energies, conn)
             if errors:
                 raise HTTPException(status_code=400, detail={"errors": errors})
 

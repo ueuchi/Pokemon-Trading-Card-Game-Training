@@ -175,7 +175,7 @@ class CpuAI:
             if player.bench_is_full:
                 break
             if card.evolution_stage == "たね":
-                r = place_to_bench(game_state, self.player_id, card.id)
+                r = place_to_bench(game_state, self.player_id, card.uid)
                 if r["success"]:
                     results.append({"action": "PLACE_BENCH", **r})
         return results
@@ -190,7 +190,7 @@ class CpuAI:
         for card in basics:
             if player.bench_is_full:
                 break
-            r = place_to_bench(game_state, self.player_id, card.id)
+            r = place_to_bench(game_state, self.player_id, card.uid)
             if r["success"]:
                 results.append({"action": "PLACE_BENCH", **r})
         return results
@@ -205,7 +205,7 @@ class CpuAI:
         active = player.active_pokemon
         needed = {e for atk in active.card.attacks for e in atk.energy}
         chosen = next((c for c in energy_cards if c.type in needed), energy_cards[0])
-        r = attach_energy(game_state, self.player_id, chosen.id, "active")
+        r = attach_energy(game_state, self.player_id, chosen.uid, "active")
         return {"action": "ATTACH_ENERGY", **r}
 
     def _attach_energy_smart(self, game_state):
@@ -224,7 +224,7 @@ class CpuAI:
                     min_shortage = shortage
                     best_card = ec
         chosen = best_card or energy_cards[0]
-        r = attach_energy(game_state, self.player_id, chosen.id, "active")
+        r = attach_energy(game_state, self.player_id, chosen.uid, "active")
         return {"action": "ATTACH_ENERGY", **r}
 
     def _attack_random(self, game_state):
@@ -294,7 +294,7 @@ class CpuAI:
         evo_card = next((c for c in player.hand if c.evolution_stage == next_stage), None)
         if not evo_card:
             return None
-        r = evolve_active(game_state, self.player_id, evo_card.id)
+        r = evolve_active(game_state, self.player_id, evo_card.uid)
         return {"action": "EVOLVE_ACTIVE", **r} if r["success"] else None
 
     def _try_evolve_bench(self, game_state):
@@ -309,7 +309,7 @@ class CpuAI:
             evo_card = next((c for c in player.hand if c.evolution_stage == next_stage), None)
             if not evo_card:
                 continue
-            r = evolve_bench(game_state, self.player_id, i, evo_card.id)
+            r = evolve_bench(game_state, self.player_id, i, evo_card.uid)
             if r["success"]:
                 results.append({"action": "EVOLVE_BENCH", **r})
         return results

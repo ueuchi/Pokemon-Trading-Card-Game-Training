@@ -17,10 +17,7 @@
         "description": "次の相手の番、このワザを受けたポケモンは、にげられない。"
       }
     ],
-    "weakness": {
-      "type": "炎",
-      "value": "×2"
-    },
+    "weakness": "炎",
     "resistance": null,
     "retreat_cost": 1
   },
@@ -42,15 +39,12 @@
         "description": "相手のバトルポケモンをどくにする。次の相手の番、このワザを受けたポケモンは、にげられない。"
       }
     ],
-    "weakness": {
-      "type": "炎",
-      "value": "×2"
-    },
+    "weakness": "炎",
     "resistance": null,
     "retreat_cost": 1
   },
   {
-    "name": "シェイミ",
+    "name": "シェaイミ",
     "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/M3/049636_P_SHIEIMI.jpg",
     "list_index": 2,
     "hp": 70,
@@ -76,10 +70,7 @@
         "description": ""
       }
     ],
-    "weakness": {
-      "type": "炎",
-      "value": "×2"
-    },
+    "weakness": "炎",
     "resistance": null,
     "retreat_cost": 0
   }

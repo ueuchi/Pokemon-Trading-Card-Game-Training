@@ -66,6 +66,13 @@ def decide_first_player(player1_id: str = "player1", player2_id: str = "player2"
     return random.choice([player1_id, player2_id])
 
 
+def _assign_uids(deck: List[PokemonCard], start: int = 1) -> List[PokemonCard]:
+    """デッキの各カードにユニークなuidを振る（同名カードを区別するため）"""
+    for i, card in enumerate(deck):
+        card.uid = start + i
+    return deck
+
+
 def setup_game(
     player1_deck: List[PokemonCard],
     player2_deck: List[PokemonCard],
@@ -88,6 +95,10 @@ def setup_game(
     Returns:
         初期化済みのGameState（game_phase=SETUP、表向きにする前の状態）
     """
+    # 各カードにユニークIDを振る（同名カード区別用）
+    _assign_uids(player1_deck, start=1)
+    _assign_uids(player2_deck, start=1001)
+
     # PlayerState初期化
     player1 = PlayerState(player_id="player1")
     player2 = PlayerState(player_id="player2")
@@ -164,13 +175,13 @@ def place_initial_pokemon(
         if card.evolution_stage != "たね":
             raise ValueError(f"ベンチにはたねポケモンのみ出せます: {card.name}")
 
-    # バトル場に配置
-    player.hand = [c for c in player.hand if c.id != active_card.id]
+    # バトル場に配置（uidで特定の1枚を除去）
+    player.hand = [c for c in player.hand if c.uid != active_card.uid]
     player.active_pokemon = ActivePokemon(card=active_card, turns_in_play=0)
 
-    # ベンチに配置
-    bench_ids = {c.id for c in bench_cards}
-    player.hand = [c for c in player.hand if c.id not in bench_ids]
+    # ベンチに配置（uidで特定のカードを除去）
+    bench_uids = {c.uid for c in bench_cards}
+    player.hand = [c for c in player.hand if c.uid not in bench_uids]
     player.bench = [BenchPokemon(card=c, turns_in_play=0) for c in bench_cards]
 
     game_state.add_log(
