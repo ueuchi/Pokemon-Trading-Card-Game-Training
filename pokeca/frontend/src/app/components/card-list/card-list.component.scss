@@ -181,6 +181,28 @@
   color: #c0392b;
 }
 
+.card-weakness {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 3px;
+}
+
+.weakness-label {
+  font-size: 10px;
+  color: #999;
+  font-weight: 600;
+}
+
+.weakness-chip {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 10px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
 .attacks-label {
   font-size: 11px;
   color: #888;

@@ -1,3 +1,7 @@
 {
-  //   "terminal.integrated.cwd": "${workspaceFolder}/pokeca"
+  //   "terminal.integrated.cwd": "${workspaceFolder}/pokeca",
+  "accessibility.signals.enabled": "on",
+  "accessibility.signals.chatResponseReceived": {
+    "sound": "on"
+  }
 }

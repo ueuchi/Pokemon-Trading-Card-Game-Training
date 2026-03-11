@@ -1,56 +1,44 @@
-/**
- * Game Board Component
- *
- * 役割：
- * - ゲーム全体のUIを管理
- * - GameServiceと連携
- * - プレイヤーとCPUの状態を表示
- */
-
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { GameService } from '../../game/services/game.service';
-import { GameState, Player, FieldPokemon } from '../../game/types/game-state.types';
-import { createPlayerDeck, createCPUDeck } from '../../game/data/test-cards.data';
+import {
+  GameApiService,
+  GameUiState,
+  ActivePokemon,
+  HandCard,
+} from '../../game/services/game-api.service';
+import { DeckService } from '../../game/services/deck.service';
+import { Deck } from '../../game/types/deck.types';
 
 @Component({
   selector: 'game-board',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './game-board.component.html',
   styleUrl: './game-board.component.scss',
 })
 export class GameBoardComponent implements OnInit, OnDestroy {
-  gameState: GameState | null = null;
-  logs: string[] = [];
-  isPlayerTurn = false;
-
-  // 選択中のカード
-  selectedCardId: string | null = null;
-  selectedAttackIndex: number | null = null;
-
-  // ベンチ関連
-  selectedBenchIndex: number | null = null; // エネルギー付与先のベンチ
-  selectedSwitchBenchIndex: number | null = null; // 入れ替え先のベンチ
+  state: GameUiState | null = null;
+  decks: Deck[] = [];
+  selectedDeckId: number | null = null;
 
   private destroy$ = new Subject<void>();
 
-  constructor(private gameService: GameService) {}
+  constructor(
+    public gameApi: GameApiService,
+    private deckService: DeckService,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone,
+  ) {}
 
   ngOnInit(): void {
-    // ゲーム状態を監視
-    this.gameService.gameState$.pipe(takeUntil(this.destroy$)).subscribe((state) => {
-      this.gameState = state;
-      this.isPlayerTurn = state?.currentTurn === 'PLAYER';
+    this.gameApi.state$.pipe(takeUntil(this.destroy$)).subscribe((state) => {
+      this.state = state;
+      this.cdr.detectChanges();
+      this._scrollLogs();
     });
-
-    // ログを監視
-    this.gameService.logs$.pipe(takeUntil(this.destroy$)).subscribe((logs) => {
-      this.logs = logs;
-      // 自動スクロール（最新のログを表示）
-      setTimeout(() => this.scrollLogsToBottom(), 100);
-    });
+    this.loadDecks();
   }
 
   ngOnDestroy(): void {
@@ -58,257 +46,331 @@ export class GameBoardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /**
-   * ゲーム開始
-   */
-  startGame(): void {
-    const config = {
-      playerDeck: createPlayerDeck(),
-      cpuDeck: createCPUDeck(),
-      prizeCount: 3,
-      handSize: 5,
-    };
-
-    this.gameService.initializeGame(config);
-    this.selectedCardId = null;
-    this.selectedAttackIndex = null;
+  loadDecks(): void {
+    this.deckService.getDecks().subscribe({
+      next: (d: Deck[]) => {
+        this.ngZone.run(() => {
+          this.decks = d;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        console.error('[loadDecks] failed:', err);
+        this.ngZone.run(() => {
+          this.decks = [];
+          this.cdr.detectChanges();
+        });
+      },
+    });
   }
 
-  /**
-   * ゲームリセット
-   */
-  resetGame(): void {
-    this.gameService.resetGame();
-    this.selectedCardId = null;
-    this.selectedAttackIndex = null;
-    this.selectedBenchIndex = null;
-    this.selectedSwitchBenchIndex = null;
+  // ==================== デッキ選択 ====================
+
+  async startGame(): Promise<void> {
+    if (!this.selectedDeckId) return;
+    await this.gameApi.startGame(this.selectedDeckId);
   }
 
-  /**
-   * カードを選択
-   */
-  selectCard(cardId: string): void {
-    if (!this.isPlayerTurn) return;
+  // ==================== コイントス ====================
 
-    this.selectedCardId = this.selectedCardId === cardId ? null : cardId;
-    this.selectedAttackIndex = null;
+  get firstPlayerLabel(): string {
+    const fp = this.state?.gameState?.first_player_id;
+    return fp === 'player1' ? 'あなた' : 'CPU';
   }
 
-  /**
-   * ポケモンを場に出す
-   */
-  playPokemon(position: 'ACTIVE' | 'BENCH'): void {
-    if (!this.selectedCardId || !this.isPlayerTurn) return;
-
-    this.gameService.executePlayerAction({
-      type: 'PLAY_POKEMON',
-      playerId: 'PLAYER',
-      cardId: this.selectedCardId,
-      position: position,
-    } as any);
-
-    this.selectedCardId = null;
+  get isPlayerFirst(): boolean {
+    return this.state?.gameState?.first_player_id === 'player1';
   }
 
-  /**
-   * エネルギーを付ける
-   */
-  attachEnergy(): void {
-    if (!this.selectedCardId || !this.isPlayerTurn || !this.gameState) return;
+  proceedToPlaceInitial(): void {
+    this.gameApi.proceedToPlaceInitial();
+  }
 
-    const player = this.gameState.players.PLAYER;
+  // ==================== 初期配置 ====================
 
-    // アクティブに付ける場合
-    if (this.selectedBenchIndex === null && player.activePokemon) {
-      this.gameService.executePlayerAction({
-        type: 'ATTACH_ENERGY',
-        playerId: 'PLAYER',
-        energyCardId: this.selectedCardId,
-        targetPosition: 'ACTIVE',
-      } as any);
+  get basicPokemonInHand(): HandCard[] {
+    return this.gameApi.basicPokemonInHand;
+  }
+
+  isInitialActive(cardId: number): boolean {
+    return this.state?.initialActiveId === cardId;
+  }
+
+  isInitialBench(cardId: number): boolean {
+    return this.state?.initialBenchIds.includes(cardId) ?? false;
+  }
+
+  toggleInitialActive(cardId: number): void {
+    this.gameApi.toggleInitialActive(cardId);
+  }
+
+  toggleInitialBench(cardId: number): void {
+    if (this.state?.initialActiveId === cardId) {
+      this.gameApi.toggleInitialActive(cardId);
+    } else {
+      this.gameApi.toggleInitialBench(cardId);
     }
-    // ベンチに付ける場合
-    else if (this.selectedBenchIndex !== null) {
-      this.gameService.executePlayerAction({
-        type: 'ATTACH_ENERGY',
-        playerId: 'PLAYER',
-        energyCardId: this.selectedCardId,
-        targetPosition: 'BENCH',
-        targetBenchIndex: this.selectedBenchIndex,
-      } as any);
-    }
-
-    this.selectedCardId = null;
-    this.selectedBenchIndex = null;
   }
 
-  /**
-   * ベンチポケモンを選択（エネルギー付与用）
-   */
-  selectBenchForEnergy(index: number): void {
-    if (!this.isPlayerTurn) return;
-    this.selectedBenchIndex = this.selectedBenchIndex === index ? null : index;
-    this.selectedSwitchBenchIndex = null; // 入れ替え選択をリセット
+  get canConfirmInitial(): boolean {
+    return !!this.state?.initialActiveId && !this.state?.isLoading;
   }
 
-  /**
-   * ベンチポケモンを選択（入れ替え用）
-   */
-  selectBenchForSwitch(index: number): void {
-    if (!this.isPlayerTurn) return;
-    this.selectedSwitchBenchIndex = this.selectedSwitchBenchIndex === index ? null : index;
-    this.selectedBenchIndex = null; // エネルギー選択をリセット
+  async confirmInitialPlacement(): Promise<void> {
+    await this.gameApi.confirmInitialPlacement();
   }
 
-  /**
-   * ポケモンを入れ替える
-   */
-  switchPokemon(): void {
-    if (this.selectedSwitchBenchIndex === null || !this.isPlayerTurn) return;
+  // ==================== 手札操作 ====================
 
-    this.gameService.executePlayerAction({
-      type: 'SWITCH_POKEMON',
-      playerId: 'PLAYER',
-      benchIndex: this.selectedSwitchBenchIndex,
-    } as any);
-
-    this.selectedSwitchBenchIndex = null;
+  selectHandCard(cardId: number): void {
+    if (!this.gameApi.isPlayerTurn) return;
+    this.gameApi.selectCard(cardId);
   }
 
-  /**
-   * ワザを選択
-   */
+  isHandCardSelected(cardId: number): boolean {
+    return this.state?.selectedCardId === cardId;
+  }
+
+  get selectedHandCard(): HandCard | null {
+    if (!this.state?.selectedCardId) return null;
+    return this.gameApi.player1?.hand.find((c) => c.uid === this.state!.selectedCardId) ?? null;
+  }
+
+  // ==================== アクション判定 ====================
+
+  get canPlaceActive(): boolean {
+    const c = this.selectedHandCard;
+    return (
+      !!c &&
+      c.card_type === 'pokemon' &&
+      c.evolution_stage === 'たね' &&
+      !this.gameApi.player1?.active_pokemon
+    );
+  }
+
+  get canPlaceBench(): boolean {
+    const c = this.selectedHandCard;
+    const bench = this.gameApi.player1?.bench ?? [];
+    return !!c && c.card_type === 'pokemon' && c.evolution_stage === 'たね' && bench.length < 5;
+  }
+
+  get canAttachEnergy(): boolean {
+    const c = this.selectedHandCard;
+    const p1 = this.gameApi.player1;
+    if (!c || !p1 || p1.energy_attached_this_turn) return false;
+    return c.card_type === 'energy' && (!!p1.active_pokemon || p1.bench.length > 0);
+  }
+
+  get canEvolveActive(): boolean {
+    const c = this.selectedHandCard;
+    const active = this.gameApi.player1?.active_pokemon;
+    if (!c || !active || c.card_type !== 'pokemon') return false;
+    const stage = c.evolution_stage;
+    return (stage === '1進化' || stage === '2進化') && c.evolves_from === active.name;
+  }
+
+  get canRetreat(): boolean {
+    const p1 = this.gameApi.player1;
+    if (!p1 || !this.gameApi.isPlayerTurn || p1.retreated_this_turn) return false;
+    return !!p1.active_pokemon && p1.bench.length > 0;
+  }
+
+  // ==================== バトルアクション ====================
+
+  async placeToActive(): Promise<void> {
+    if (!this.state?.selectedCardId) return;
+    await this.gameApi.sendAction('place_active', { cardId: this.state.selectedCardId });
+  }
+
+  async placeToBench(): Promise<void> {
+    if (!this.state?.selectedCardId) return;
+    await this.gameApi.sendAction('place_bench', { cardId: this.state.selectedCardId });
+  }
+
+  async attachEnergyToActive(): Promise<void> {
+    if (!this.state?.selectedCardId) return;
+    await this.gameApi.sendAction('attach_energy', {
+      cardId: this.state.selectedCardId,
+      target: 'active',
+    });
+  }
+
+  async attachEnergyToBench(benchIndex: number): Promise<void> {
+    if (!this.state?.selectedCardId) return;
+    await this.gameApi.sendAction('attach_energy', {
+      cardId: this.state.selectedCardId,
+      target: 'bench',
+      benchIndex,
+    });
+  }
+
+  async evolveActive(): Promise<void> {
+    if (!this.state?.selectedCardId) return;
+    await this.gameApi.sendAction('evolve_active', { cardId: this.state.selectedCardId });
+  }
+
   selectAttack(index: number): void {
-    if (!this.isPlayerTurn) return;
-    this.selectedAttackIndex = index;
+    if (!this.gameApi.isPlayerTurn || !this.gameApi.canAttack) return;
+    this.gameApi.selectAttack(index);
   }
 
-  /**
-   * 攻撃実行
-   */
-  executeAttack(): void {
-    if (this.selectedAttackIndex === null || !this.isPlayerTurn) return;
-
-    this.gameService.executePlayerAction({
-      type: 'ATTACK',
-      playerId: 'PLAYER',
-      attackIndex: this.selectedAttackIndex,
-    });
-
-    this.selectedAttackIndex = null;
+  async executeAttack(): Promise<void> {
+    if (this.state?.selectedAttackIndex == null) return;
+    await this.gameApi.sendAction('attack', { attackIndex: this.state.selectedAttackIndex });
   }
 
-  /**
-   * ターン終了
-   */
-  endTurn(): void {
-    if (!this.isPlayerTurn) return;
-
-    this.gameService.executePlayerAction({
-      type: 'END_TURN',
-      playerId: 'PLAYER',
-    });
-
-    this.selectedCardId = null;
-    this.selectedAttackIndex = null;
-    this.selectedBenchIndex = null;
-    this.selectedSwitchBenchIndex = null;
+  async replaceFainted(benchIndex: number): Promise<void> {
+    await this.gameApi.replaceActive(benchIndex);
   }
 
-  /**
-   * カードタイプを判定
-   */
-  getCardType(card: any): 'POKEMON' | 'ENERGY' | 'TRAINER' {
-    return card.type;
+  async endTurn(): Promise<void> {
+    await this.gameApi.endTurn();
   }
 
-  /**
-   * エネルギータイプの日本語名
-   */
-  getEnergyTypeName(type: string): string {
-    const names: Record<string, string> = {
-      FIRE: 'ほのお',
-      WATER: 'みず',
-      GRASS: 'くさ',
-      ELECTRIC: 'でんき',
-      COLORLESS: '無色',
+  resetGame(): void {
+    this.gameApi.resetGame();
+    this.selectedDeckId = null;
+  }
+
+  // ==================== ベンチ操作 ====================
+
+  toggleBenchForEnergy(index: number): void {
+    if (!this.gameApi.isPlayerTurn) return;
+    this.gameApi.selectBench(index);
+  }
+
+  isBenchSelectedForEnergy(index: number): boolean {
+    return this.state?.selectedBenchIndex === index;
+  }
+
+  // ==================== 表示ヘルパー ====================
+
+  // ==================== デッキ情報ヘルパー ====================
+
+  /** デッキのエネルギーバッジ一覧を返す */
+  getDeckEnergyBadges(deck: Deck): { type: string; count: number; emoji: string; color: string }[] {
+    return Object.entries(deck.energies ?? {}).map(([type, count]) => ({
+      type,
+      count,
+      emoji: this.getTypeEmoji(type),
+      color: this.getTypeColor(type),
+    }));
+  }
+
+  /** デッキ内のポケモンカード合計枚数 */
+  getDeckPokemonCount(deck: Deck): number {
+    const stages = ['たね', '1 進化', '2 進化'];
+    return deck.cards
+      .filter((c) => c.evolution_stage && stages.includes(c.evolution_stage))
+      .reduce((sum, c) => sum + c.count, 0);
+  }
+
+  /** デッキ内のトレーナーカード合計枚数 */
+  getDeckTrainerCount(deck: Deck): number {
+    const trainerTypes = ['サポート', 'グッズ', 'スタジアム'];
+    return deck.cards
+      .filter((c) => c.type && trainerTypes.includes(c.type))
+      .reduce((sum, c) => sum + c.count, 0);
+  }
+
+  /** デッキのメインカラー（エネルギーの最初のタイプ） */
+  getDeckMainColor(deck: Deck): string {
+    const topType = Object.keys(deck.energies ?? {})[0] ?? null;
+    return this.getTypeColor(topType);
+  }
+
+  getTypeColor(type: string | null): string {
+    if (!type) return '#9E9E9E';
+    const colors: Record<string, string> = {
+      草: '#4CAF50',
+      炎: '#FF5722',
+      水: '#2196F3',
+      雷: '#FFC107',
+      超: '#9C27B0',
+      闘: '#FF8F00',
+      悪: '#424242',
+      鋼: '#78909C',
+      ドラゴン: '#1565C0',
+      フェアリー: '#EC407A',
+      無色: '#9E9E9E',
     };
-    return names[type] || type;
+    return colors[type] ?? '#9E9E9E';
   }
 
-  /**
-   * ログを最下部にスクロール
-   */
-  private scrollLogsToBottom(): void {
-    const logElement = document.getElementById('game-logs');
-    if (logElement) {
-      logElement.scrollTop = logElement.scrollHeight;
-    }
+  getTypeEmoji(type: string | null): string {
+    if (!type) return '⭕';
+    const emojis: Record<string, string> = {
+      草: '🌿',
+      炎: '🔥',
+      水: '💧',
+      雷: '⚡',
+      超: '🔮',
+      闘: '👊',
+      悪: '🌑',
+      鋼: '⚙️',
+      ドラゴン: '🐉',
+      フェアリー: '✨',
+      無色: '⭕',
+    };
+    return emojis[type] ?? '⭕';
   }
 
-  /**
-   * プレイヤー情報取得
-   */
-  get player(): Player | null {
-    return this.gameState?.players.PLAYER || null;
+  getCardRuleLabel(rule: string | null): string {
+    if (rule === 'ex') return 'EX';
+    if (rule === 'mega_ex') return 'MEGA EX';
+    return '';
   }
 
-  /**
-   * CPU情報取得
-   */
-  get cpu(): Player | null {
-    return this.gameState?.players.CPU || null;
+  getPokemonTypeLabel(pt: string | null): string {
+    if (pt === 'trainer_pokemon') return 'トレーナーポケモン';
+    return '';
   }
 
-  /**
-   * ゲームが終了しているか
-   */
-  get isGameFinished(): boolean {
-    return this.gameState?.gameStatus === 'FINISHED';
+  getCardBackPlaceholders(count: number): number[] {
+    const capped = Math.max(0, Math.min(12, count));
+    return Array.from({ length: capped }, (_, i) => i);
   }
 
-  /**
-   * 勝者
-   */
-  get winner(): string | null {
-    if (!this.isGameFinished || !this.gameState) return null;
-    return this.gameState.winner === 'PLAYER' ? 'あなた' : 'CPU';
+  hpPercent(pokemon: ActivePokemon): number {
+    if (!pokemon.hp) return 100;
+    return Math.max(0, Math.min(100, (pokemon.current_hp / pokemon.hp) * 100));
   }
 
-  /**
-   * 選択されたカードをアクティブに出せるか
-   */
-  canPlayPokemonActive(): boolean {
-    if (!this.selectedCardId || !this.player) return false;
-    const card = this.player.hand.find((c) => c.id === this.selectedCardId);
-    return card ? this.getCardType(card) === 'POKEMON' && !this.player.activePokemon : false;
+  hpBarClass(pokemon: ActivePokemon): string {
+    const pct = this.hpPercent(pokemon);
+    if (pct > 50) return 'hp-high';
+    if (pct > 25) return 'hp-mid';
+    return 'hp-low';
   }
 
-  /**
-   * 選択されたカードをベンチに出せるか
-   */
-  canPlayPokemonBench(): boolean {
-    if (!this.selectedCardId || !this.player) return false;
-    const card = this.player.hand.find((c) => c.id === this.selectedCardId);
-    return card ? this.getCardType(card) === 'POKEMON' && this.player.bench.length < 5 : false;
+  get turnLabel(): string {
+    if (!this.state?.gameState) return '';
+    return this.gameApi.isPlayerTurn
+      ? 'あなたのターン'
+      : this.state.isCpuThinking
+        ? 'CPUが考え中…'
+        : 'CPUのターン';
   }
 
-  /**
-   * アクティブにエネルギーを付けられるか
-   */
-  canAttachEnergyActive(): boolean {
-    if (!this.selectedCardId || !this.player || this.selectedBenchIndex !== null) return false;
-    const card = this.player.hand.find((c) => c.id === this.selectedCardId);
-    return card ? this.getCardType(card) === 'ENERGY' && !!this.player.activePokemon : false;
+  get phaseLabel(): string {
+    const p = this.state?.gameState?.turn_phase;
+    const m: Record<string, string> = {
+      draw: 'ドロー',
+      main: 'メイン',
+      attack: '攻撃後',
+      end: '終了',
+    };
+    return p ? (m[p] ?? p) : '';
   }
 
-  /**
-   * ベンチにエネルギーを付けられるか
-   */
-  canAttachEnergyBench(): boolean {
-    if (!this.selectedCardId || !this.player || this.selectedBenchIndex === null) return false;
-    const card = this.player.hand.find((c) => c.id === this.selectedCardId);
-    return card ? this.getCardType(card) === 'ENERGY' : false;
+  get needsReplacement(): boolean {
+    return this.gameApi.needsReplacement;
+  }
+
+  private _scrollLogs(): void {
+    setTimeout(() => {
+      const el = document.getElementById('game-logs');
+      if (el) el.scrollTop = el.scrollHeight;
+    }, 50);
   }
 }

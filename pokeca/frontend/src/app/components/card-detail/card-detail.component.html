@@ -1,10 +1,5 @@
-<div
-  class="modal-overlay"
-  *ngIf="isVisible && card"
-  (click)="onOverlayClick($event)"
->
+<div class="modal-overlay" *ngIf="isVisible && card" (click)="onOverlayClick($event)">
   <div class="modal-panel">
-
     <!-- ヘッダー -->
     <div class="modal-header" [style.background]="getTypeColor(card.type)">
       <div class="header-content">
@@ -18,7 +13,6 @@
     <!-- ボディ -->
     <div class="modal-body">
       <div class="detail-layout">
-
         <!-- 左カラム：画像 -->
         <div class="image-col">
           <img
@@ -26,7 +20,7 @@
             [src]="card.image_url"
             [alt]="card.name"
             class="card-image"
-            (error)="$any($event.target).style.display='none'"
+            (error)="$any($event.target).style.display = 'none'"
           />
           <div
             *ngIf="!card.image_url"
@@ -39,7 +33,6 @@
 
         <!-- 右カラム：詳細情報 -->
         <div class="info-col">
-
           <!-- 基本情報 -->
           <section class="info-section">
             <h3 class="section-title">基本情報</h3>
@@ -54,7 +47,9 @@
               </tr>
               <tr *ngIf="card.hp">
                 <th>HP</th>
-                <td><span class="hp-value">{{ card.hp }}</span></td>
+                <td>
+                  <span class="hp-value">{{ card.hp }}</span>
+                </td>
               </tr>
               <tr *ngIf="card.retreat_cost !== null">
                 <th>にげるコスト</th>
@@ -70,10 +65,9 @@
               <tr *ngIf="card.weakness">
                 <th>弱点</th>
                 <td>
-                  <span class="type-chip" [style.background]="getTypeColor(card.weakness.type)">
-                    {{ card.weakness.type }}
+                  <span class="type-chip" [style.background]="getTypeColor(card.weakness)">
+                    {{ card.weakness }}
                   </span>
-                  {{ card.weakness.value }}
                 </td>
               </tr>
               <tr *ngIf="card.resistance">
@@ -95,7 +89,9 @@
               <div *ngFor="let attack of card.attacks" class="attack-item">
                 <div class="attack-header">
                   <span class="attack-name">{{ attack.name }}</span>
-                  <span class="attack-damage" *ngIf="attack.damage">{{ attack.damage }}ダメージ</span>
+                  <span class="attack-damage" *ngIf="attack.damage"
+                    >{{ attack.damage }}ダメージ</span
+                  >
                 </div>
                 <div class="attack-cost" *ngIf="attack.energy.length">
                   コスト：{{ formatEnergyCost(attack.energy) }}
@@ -104,7 +100,6 @@
               </div>
             </div>
           </section>
-
         </div>
       </div>
     </div>
@@ -113,6 +108,5 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="onClose()">閉じる</button>
     </div>
-
   </div>
 </div>

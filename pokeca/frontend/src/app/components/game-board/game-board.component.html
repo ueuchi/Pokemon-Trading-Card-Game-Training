@@ -1,323 +1,564 @@
-<div class="game-container">
-  <!-- ヘッダー -->
-  <div class="header flex flex-c-c flex-bet">
-    <h1>バトル</h1>
-    <div class="game-controls">
-      @if (!gameState) {
-        <button (click)="startGame()" class="btn btn-primary">ゲーム開始</button>
-      }
-      @if (gameState) {
-        <button (click)="resetGame()" class="btn btn-secondary">リセット</button>
-      }
-    </div>
-  </div>
+<div class="game-wrapper">
+  <!-- ========== デッキ選択画面 ========== -->
+  @if (state?.screen === 'deck-select') {
+    <div class="screen deck-select-screen">
+      <div class="title-area">
+        <div class="pokeball-deco"></div>
+        <h1 class="game-title">POKÉMON TCG</h1>
+        <p class="game-subtitle">CPU バトル</p>
+      </div>
+      <div class="deck-select-card">
+        <h2 class="section-title">デッキを選択</h2>
+        @if (decks.length === 0) {
+          <p class="no-deck-msg">デッキが見つかりません。<br />先にデッキを作成してください。</p>
+        }
+        <div class="deck-list">
+          @for (deck of decks; track deck.id) {
+            <div
+              class="deck-item"
+              [class.selected]="selectedDeckId === deck.id"
+              (click)="selectedDeckId = deck.id"
+            >
+              <!-- 左端のカラーバー -->
+              <div class="deck-color-bar" [style.background]="getDeckMainColor(deck)"></div>
 
-  <!-- ゲーム終了メッセージ -->
-  @if (isGameFinished) {
-    <div class="game-over">
-      <h2>🎉 ゲーム終了！</h2>
-      <p class="winner">{{ winner }}の勝利！</p>
-      <button (click)="resetGame()" class="btn btn-primary">もう一度プレイ</button>
+              <!-- デッキ情報本体 -->
+              <div class="deck-body">
+                <div class="deck-header">
+                  <span class="deck-name">{{ deck.name }}</span>
+                  @if (selectedDeckId === deck.id) {
+                    <span class="check-mark">✓</span>
+                  }
+                </div>
+
+                @if (deck.description) {
+                  <p class="deck-desc">{{ deck.description }}</p>
+                }
+
+                <!-- カード枚数内訳 -->
+                <div class="deck-stats">
+                  <span class="stat-chip">🎴 合計 {{ deck.total_count }} 枚</span>
+                  <span class="stat-chip">🐾 ポケモン {{ getDeckPokemonCount(deck) }} 枚</span>
+                  <span class="stat-chip">📋 トレーナー {{ getDeckTrainerCount(deck) }} 枚</span>
+                </div>
+
+                <!-- エネルギーバッジ -->
+                <div class="energy-badges">
+                  @for (badge of getDeckEnergyBadges(deck); track badge.type) {
+                    <span class="energy-badge" [style.background]="badge.color">
+                      {{ badge.emoji }} {{ badge.type }}エネ ×{{ badge.count }}
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        @if (state?.error) {
+          <p class="error-msg">⚠️ {{ state!.error }}</p>
+        }
+        <button
+          class="btn-start"
+          [disabled]="!selectedDeckId || state?.isLoading"
+          (click)="startGame()"
+        >
+          @if (state?.isLoading) {
+            準備中…
+          } @else {
+            バトル開始！
+          }
+        </button>
+      </div>
     </div>
   }
 
-  <!-- メインゲームエリア -->
-  @if (gameState && !isGameFinished) {
-    <div class="game-board">
-      <!-- CPUエリア -->
-      <div class="player-area cpu-area">
-        <h2>CPU</h2>
-
-        <!-- CPUのアクティブポケモン -->
-        <div class="active-pokemon-area">
-          <h3>アクティブポケモン</h3>
-          @if (cpu?.activePokemon) {
-            <div class="pokemon-card">
-              <div class="card-header">
-                <span class="pokemon-name">{{ cpu!.activePokemon!.card.name }}</span>
-                <span class="pokemon-type">{{
-                  getEnergyTypeName(cpu!.activePokemon!.card.energyType)
-                }}</span>
-              </div>
-              <div class="card-body">
-                <div class="hp-bar">
-                  <span class="hp-text"
-                    >HP: {{ cpu!.activePokemon!.currentHp }} /
-                    {{ cpu!.activePokemon!.card.hp }}</span
-                  >
-                  <div class="hp-progress">
-                    <div
-                      class="hp-fill"
-                      [style.width.%]="
-                        (cpu!.activePokemon!.currentHp / cpu!.activePokemon!.card.hp) * 100
-                      "
-                    ></div>
-                  </div>
-                </div>
-                <div class="attached-energy">
-                  <span class="energy-label">エネルギー:</span>
-                  <span
-                    *ngFor="let energy of cpu!.activePokemon!.attachedEnergy"
-                    class="energy-icon"
-                  >
-                    {{ getEnergyTypeName(energy.energyType) }}
-                  </span>
-                  @if (cpu!.activePokemon!.attachedEnergy.length === 0) {
-                    <span class="no-energy">なし</span>
-                  }
-                </div>
-              </div>
-            </div>
-          }
-          @if (!cpu?.activePokemon) {
-            <div class="empty-slot">ポケモンなし</div>
-          }
-        </div>
-
-        <!-- CPUのベンチポケモン -->
-        <div class="bench-area">
-          <h3>ベンチ ({{ cpu!.bench.length }}/5)</h3>
-          <div class="bench-pokemon-list">
-            <div *ngFor="let benchPokemon of cpu?.bench; let i = index" class="bench-pokemon-card">
-              <div class="mini-card">
-                <span class="pokemon-name">{{ benchPokemon.card.name }}</span>
-                <span class="pokemon-hp"
-                  >HP: {{ benchPokemon.currentHp }}/{{ benchPokemon.card.hp }}</span
-                >
-                <div class="mini-hp-bar">
-                  <div
-                    class="mini-hp-fill"
-                    [style.width.%]="(benchPokemon.currentHp / benchPokemon.card.hp) * 100"
-                  ></div>
-                </div>
-                <span class="energy-count">⚡{{ benchPokemon.attachedEnergy.length }}</span>
-              </div>
-            </div>
-            @if (cpu!.bench.length === 0) {
-              <div class="empty-bench">ベンチなし</div>
-            }
-          </div>
-        </div>
-
-        <!-- CPUの情報 -->
-        <div class="player-info">
-          <div class="info-item">
-            <span class="info-label">山札:</span>
-            <span class="info-value">{{ cpu!.deck.length }}枚</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">手札:</span>
-            <span class="info-value">{{ cpu!.hand.length }}枚</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">サイド:</span>
-            <span class="info-value">{{ cpu!.prizes.length }}枚</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- ターン情報 -->
-      <div class="turn-info">
+  <!-- ========== コイントス画面 ========== -->
+  @if (state?.screen === 'coin-toss') {
+    <div class="screen coin-toss-screen">
+      <div class="coin-toss-card">
+        <div class="coin-icon">🪙</div>
+        <h2 class="coin-result-title">コイントス結果</h2>
         <div
-          class="turn-indicator"
-          [class.player-turn]="isPlayerTurn"
-          [class.cpu-turn]="!isPlayerTurn"
+          class="coin-result-badge"
+          [class.player-first]="isPlayerFirst"
+          [class.cpu-first]="!isPlayerFirst"
         >
-          <h3>ターン {{ gameState.turnCount }}</h3>
-          <p class="current-turn">{{ isPlayerTurn ? 'あなたのターン' : 'CPUのターン' }}</p>
-          <p class="phase">フェーズ: {{ gameState.phase }}</p>
+          {{ firstPlayerLabel }}が先行！
         </div>
-      </div>
-
-      <!-- プレイヤーエリア -->
-      <div class="player-area player-area-main">
-        <h2>あなた</h2>
-
-        <!-- プレイヤーのアクティブポケモン -->
-        <div class="active-pokemon-area">
-          <h3>アクティブポケモン</h3>
-          @if (player?.activePokemon) {
-            <div class="pokemon-card player-pokemon">
-              <div class="card-header">
-                <span class="pokemon-name">{{ player!.activePokemon!.card.name }}</span>
-                <span class="pokemon-type">{{
-                  getEnergyTypeName(player!.activePokemon!.card.energyType)
-                }}</span>
-              </div>
-              <div class="card-body">
-                <div class="hp-bar">
-                  <span class="hp-text"
-                    >HP: {{ player!.activePokemon!.currentHp }} /
-                    {{ player!.activePokemon!.card.hp }}</span
-                  >
-                  <div class="hp-progress">
-                    <div
-                      class="hp-fill"
-                      [style.width.%]="
-                        (player!.activePokemon!.currentHp / player!.activePokemon!.card.hp) * 100
-                      "
-                    ></div>
-                  </div>
-                </div>
-                <div class="attached-energy">
-                  <span class="energy-label">エネルギー:</span>
-                  <span
-                    *ngFor="let energy of player!.activePokemon!.attachedEnergy"
-                    class="energy-icon"
-                  >
-                    {{ getEnergyTypeName(energy.energyType) }}
-                  </span>
-                  @if (player!.activePokemon!.attachedEnergy.length === 0) {
-                    <span class="no-energy">なし</span>
-                  }
-                </div>
-                <div class="attacks">
-                  <h4>ワザ</h4>
-                  <div
-                    *ngFor="let attack of player!.activePokemon!.card.attacks; let i = index"
-                    class="attack-option"
-                    [class.selected]="selectedAttackIndex === i"
-                    (click)="selectAttack(i)"
-                  >
-                    <span class="attack-name">{{ attack.name }}</span>
-                    <span class="attack-damage">
-                      <ng-container *ngFor="let cost of attack.energyCost">
-                        {{ getEnergyTypeName(cost.type) }}×{{ cost.amount }}
-                      </ng-container>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          }
-          @if (!player?.activePokemon) {
-            <div class="empty-slot">ポケモンなし（手札からポケモンを出してください）</div>
-          }
-        </div>
-
-        <!-- プレイヤーのベンチポケモン -->
-        <div class="bench-area">
-          <h3>ベンチ ({{ player!.bench.length }}/5)</h3>
-          <div class="bench-pokemon-list">
-            <div
-              *ngFor="let benchPokemon of player?.bench; let i = index"
-              class="bench-pokemon-card"
-              [class.selected-for-energy]="selectedBenchIndex === i"
-              [class.selected-for-switch]="selectedSwitchBenchIndex === i"
-            >
-              <div class="mini-card" (click)="selectBenchForEnergy(i)">
-                <span class="pokemon-name">{{ benchPokemon.card.name }}</span>
-                <span class="pokemon-hp"
-                  >HP: {{ benchPokemon.currentHp }}/{{ benchPokemon.card.hp }}</span
-                >
-                <div class="mini-hp-bar">
-                  <div
-                    class="mini-hp-fill"
-                    [style.width.%]="(benchPokemon.currentHp / benchPokemon.card.hp) * 100"
-                  ></div>
-                </div>
-                <span class="energy-count">⚡{{ benchPokemon.attachedEnergy.length }}</span>
-              </div>
-              @if (isPlayerTurn) {
-                <button
-                  (click)="selectBenchForSwitch(i); $event.stopPropagation()"
-                  class="btn-mini"
-                >
-                  入替
-                </button>
+        @if (state?.gameState?.mulligan_info; as m) {
+          @if (m.player1_mulligans > 0 || m.player2_mulligans > 0) {
+            <div class="mulligan-info">
+              <p class="mulligan-title">マリガン情報</p>
+              @if (m.player1_mulligans > 0) {
+                <p>🔄 あなた: {{ m.player1_mulligans }}回マリガン</p>
+              }
+              @if (m.player2_mulligans > 0) {
+                <p>🔄 CPU: {{ m.player2_mulligans }}回マリガン</p>
+                @if (m.player2_mulligans > 0) {
+                  <p class="mulligan-bonus">✨ あなたは{{ m.player2_mulligans }}枚追加ドロー済み</p>
+                }
               }
             </div>
-            @if (player!.bench.length === 0) {
-              <div class="empty-bench">ベンチなし</div>
+          }
+        }
+        <p class="coin-sub">手札からたねポケモンを選んで配置してください</p>
+        <button class="btn-start" (click)="proceedToPlaceInitial()">ポケモンを配置する →</button>
+      </div>
+    </div>
+  }
+
+  <!-- ========== 初期配置画面 ========== -->
+  @if (state?.screen === 'place-initial') {
+    <div class="screen place-initial-screen">
+      <h2 class="section-title">初期ポケモンを選択</h2>
+      <div class="place-guide">
+        <div class="guide-step" [class.done]="!!state?.initialActiveId">
+          <span class="guide-num">1</span>
+          <span>バトル場に出すポケモンを選択（必須）</span>
+          @if (state?.initialActiveId) {
+            <span class="guide-check">✓</span>
+          }
+        </div>
+        <div class="guide-step">
+          <span class="guide-num">2</span>
+          <span>ベンチに出すポケモンを選択（任意・最大5体）</span>
+          <span class="guide-count">{{ state?.initialBenchIds?.length ?? 0 }}/5</span>
+        </div>
+      </div>
+      <div class="initial-hand">
+        @for (card of basicPokemonInHand; track card.uid) {
+          <div
+            class="init-card"
+            [class.active-selected]="isInitialActive(card.uid)"
+            [class.bench-selected]="isInitialBench(card.uid)"
+            (click)="
+              isInitialActive(card.uid)
+                ? toggleInitialActive(card.uid)
+                : state?.initialActiveId
+                  ? toggleInitialBench(card.uid)
+                  : toggleInitialActive(card.uid)
+            "
+          >
+            @if (card.image_url) {
+              <img class="init-card-img" [src]="card.image_url" [alt]="card.name" />
+            } @else {
+              <div class="init-card-type-bar" [style.background]="getTypeColor(card.type)"></div>
+              <span class="init-card-emoji">{{ getTypeEmoji(card.type) }}</span>
+            }
+            <span class="init-card-name">{{ card.name }}</span>
+            @if (getPokemonTypeLabel(card.pokemon_type)) {
+              <span class="trainer-badge">{{ getPokemonTypeLabel(card.pokemon_type) }}</span>
+            }
+            @if (isInitialActive(card.uid)) {
+              <span class="badge badge-active">バトル場</span>
+            } @else if (isInitialBench(card.uid)) {
+              <span class="badge badge-bench">ベンチ</span>
+            }
+          </div>
+        }
+        @if (basicPokemonInHand.length === 0) {
+          <p class="no-basic-msg">たねポケモンが手札にありません（マリガン処理に問題があります）</p>
+        }
+      </div>
+      @if (state?.error) {
+        <p class="error-msg">⚠️ {{ state!.error }}</p>
+      }
+      <button class="btn-start" [disabled]="!canConfirmInitial" (click)="confirmInitialPlacement()">
+        @if (state?.isLoading) {
+          配置中…
+        } @else {
+          配置を確定する
+        }
+      </button>
+    </div>
+  }
+
+  <!-- ========== バトル画面 ========== -->
+  @if (state?.screen === 'battle' && state?.gameState) {
+    <div class="screen battle-screen">
+      <!-- トップバー -->
+      <div class="top-bar">
+        <div
+          class="turn-badge"
+          [class.player-turn]="gameApi.isPlayerTurn"
+          [class.cpu-turn]="!gameApi.isPlayerTurn"
+        >
+          <span class="turn-label">{{ turnLabel }}</span>
+          <span class="turn-count">ターン {{ state!.gameState!.current_turn }}</span>
+        </div>
+        <div class="phase-badge">{{ phaseLabel }}</div>
+        @if (state!.gameState!.is_first_turn) {
+          <div class="first-turn-badge">先攻1ターン目は攻撃不可</div>
+        }
+        <button class="btn-reset-sm" (click)="resetGame()">終了</button>
+      </div>
+
+      @if (state?.isCpuThinking) {
+        <div class="cpu-thinking-overlay">
+          <div class="thinking-spinner"></div>
+          <span>CPUが考え中…</span>
+        </div>
+      }
+
+      @if (needsReplacement) {
+        <div class="replacement-banner">
+          <p>⚠️ バトルポケモンがきぜつ！ベンチから選んでください</p>
+          <div class="bench-replace-list">
+            @for (b of gameApi.player1!.bench; track $index) {
+              <button class="btn-bench-replace" (click)="replaceFainted($index)">
+                {{ b.name }} (HP {{ b.current_hp }}/{{ b.hp }})
+              </button>
             }
           </div>
         </div>
+      }
 
-        <!-- プレイヤーの手札 -->
-        <div class="hand-area">
-          <h3>手札</h3>
-          <div class="hand-cards">
-            <div
-              *ngFor="let card of player?.hand"
-              class="hand-card"
-              [class.selected]="selectedCardId === card.id"
-              [class.pokemon]="getCardType(card) === 'POKEMON'"
-              [class.energy]="getCardType(card) === 'ENERGY'"
-              (click)="selectCard(card.id)"
-            >
-              <div class="card-mini">
-                <span class="card-name">{{ card.name }}</span>
-                <span class="card-type-badge">
-                  {{ getCardType(card) === 'POKEMON' ? 'ポケモン' : 'エネルギー' }}
-                </span>
+      <div class="battle-table">
+        <aside class="left-side-column">
+          <div class="side-stack cpu-side">
+            <p class="zone-title">CPU サイド</p>
+            <div class="card-stack" [style.--stack-size]="gameApi.player2?.prize_remaining ?? 0">
+              <span class="stack-count">{{ gameApi.player2?.prize_remaining ?? 0 }}</span>
+            </div>
+          </div>
+          <div class="side-stack player-side">
+            <p class="zone-title">あなたのサイド</p>
+            <div class="card-stack" [style.--stack-size]="gameApi.player1?.prize_remaining ?? 0">
+              <span class="stack-count">{{ gameApi.player1?.prize_remaining ?? 0 }}</span>
+            </div>
+          </div>
+        </aside>
+
+        <section class="board-center">
+          <div class="opponent-band">
+            <div class="band-title-row">
+              <h3 class="band-title">相手の手札</h3>
+              <span class="count-pill">{{ gameApi.player2?.hand_count ?? 0 }}枚</span>
+            </div>
+            <div class="opponent-hand-cards">
+              @for (n of getCardBackPlaceholders(gameApi.player2?.hand_count ?? 0); track $index) {
+                <div class="opponent-hand-card"></div>
+              }
+            </div>
+          </div>
+
+          <div class="arena-surface">
+            <div class="bench-row cpu-bench">
+              @for (b of gameApi.player2?.bench; track $index) {
+                <div class="bench-card">
+                  <div class="bench-type-dot" [style.background]="getTypeColor(b.type)"></div>
+                  <span class="bench-name">{{ b.name }}</span>
+                  @if (b.card_rule) {
+                    <span class="rule-pip">{{ getCardRuleLabel(b.card_rule) }}</span>
+                  }
+                  <div class="bench-hp-bar">
+                    <div
+                      class="bench-hp-fill"
+                      [class]="hpBarClass(b)"
+                      [style.width.%]="hpPercent(b)"
+                    ></div>
+                  </div>
+                  <span class="bench-hp-text">{{ b.current_hp }}/{{ b.hp }}</span>
+                  <span class="bench-energy">⚡{{ b.attached_energy.length }}</span>
+                </div>
+              }
+              @if (!gameApi.player2?.bench?.length) {
+                <div class="empty-bench">ベンチなし</div>
+              }
+            </div>
+
+            <div class="battle-lane">
+              <div class="active-zone cpu-active-zone">
+                @if (gameApi.player2?.active_pokemon; as ap) {
+                  <div class="active-card" [style.border-color]="getTypeColor(ap.type)">
+                    @if (ap.image_url) {
+                      <img class="active-img" [src]="ap.image_url" [alt]="ap.name" />
+                    }
+                    <div class="active-type-bar" [style.background]="getTypeColor(ap.type)">
+                      <span>{{ getTypeEmoji(ap.type) }} {{ ap.type }}</span>
+                      @if (ap.card_rule) {
+                        <span class="rule-badge">{{ getCardRuleLabel(ap.card_rule) }}</span>
+                      }
+                      @if (ap.pokemon_type === 'trainer_pokemon') {
+                        <span class="trainer-pip">T</span>
+                      }
+                    </div>
+                    <div class="active-name">{{ ap.name }}</div>
+                    <div class="active-stage">{{ ap.evolution_stage }}</div>
+                    <div class="hp-section">
+                      <div class="hp-numbers">{{ ap.current_hp }} / {{ ap.hp }} HP</div>
+                      <div class="hp-bar-bg">
+                        <div
+                          class="hp-bar-fill"
+                          [class]="hpBarClass(ap)"
+                          [style.width.%]="hpPercent(ap)"
+                        ></div>
+                      </div>
+                    </div>
+                    <div class="energy-row">
+                      @for (e of ap.attached_energy; track $index) {
+                        <span class="energy-dot">⚡</span>
+                      }
+                      @if (!ap.attached_energy.length) {
+                        <span class="no-energy">エネルギーなし</span>
+                      }
+                    </div>
+                  </div>
+                } @else {
+                  <div class="empty-active">バトル場空</div>
+                }
+              </div>
+
+              <div class="vs-divider"><span class="vs-text">VS</span></div>
+
+              <div class="active-zone player-active-zone">
+                @if (gameApi.player1?.active_pokemon; as ap) {
+                  <div
+                    class="active-card player-active"
+                    [style.border-color]="getTypeColor(ap.type)"
+                  >
+                    @if (ap.image_url) {
+                      <img class="active-img" [src]="ap.image_url" [alt]="ap.name" />
+                    }
+                    <div class="active-type-bar" [style.background]="getTypeColor(ap.type)">
+                      <span>{{ getTypeEmoji(ap.type) }} {{ ap.type }}</span>
+                      @if (ap.card_rule) {
+                        <span class="rule-badge">{{ getCardRuleLabel(ap.card_rule) }}</span>
+                      }
+                      @if (ap.pokemon_type === 'trainer_pokemon') {
+                        <span class="trainer-pip">T</span>
+                      }
+                    </div>
+                    <div class="active-name">{{ ap.name }}</div>
+                    <div class="active-stage">{{ ap.evolution_stage }}</div>
+                    <div class="hp-section">
+                      <div class="hp-numbers">{{ ap.current_hp }} / {{ ap.hp }} HP</div>
+                      <div class="hp-bar-bg">
+                        <div
+                          class="hp-bar-fill"
+                          [class]="hpBarClass(ap)"
+                          [style.width.%]="hpPercent(ap)"
+                        ></div>
+                      </div>
+                    </div>
+                    <div class="energy-row">
+                      @for (e of ap.attached_energy; track $index) {
+                        <span class="energy-dot">⚡</span>
+                      }
+                      @if (!ap.attached_energy.length) {
+                        <span class="no-energy">エネルギーなし</span>
+                      }
+                    </div>
+                    @if (ap.ability) {
+                      <div class="ability-row">
+                        <span class="ability-label">特性</span>
+                        <span class="ability-name">{{ ap.ability.name }}</span>
+                      </div>
+                    }
+                    @if (gameApi.isPlayerTurn && gameApi.canAttack) {
+                      <div class="attacks-list">
+                        @for (atk of ap.attacks; track $index) {
+                          <div
+                            class="attack-row"
+                            [class.selected-attack]="state!.selectedAttackIndex === $index"
+                            (click)="selectAttack($index)"
+                          >
+                            <div class="atk-cost">
+                              @for (e of atk.energy; track $index) {
+                                <span class="atk-pip">⚡</span>
+                              }
+                            </div>
+                            <span class="atk-name">{{ atk.name }}</span>
+                            <span class="atk-dmg">{{
+                              atk.damage > 0 ? atk.damage + '点' : '効果'
+                            }}</span>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="empty-active player-empty">
+                    <span>バトル場空</span>
+                    <span class="hint-sm">手札からたねポケモンを出してください</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="bench-row player-bench">
+              @for (b of gameApi.player1?.bench; track $index) {
+                <div
+                  class="bench-card player-bench-card"
+                  [class.bench-energy-target]="isBenchSelectedForEnergy($index)"
+                  (click)="toggleBenchForEnergy($index)"
+                >
+                  <div class="bench-type-dot" [style.background]="getTypeColor(b.type)"></div>
+                  <span class="bench-name">{{ b.name }}</span>
+                  @if (b.card_rule) {
+                    <span class="rule-pip">{{ getCardRuleLabel(b.card_rule) }}</span>
+                  }
+                  <div class="bench-hp-bar">
+                    <div
+                      class="bench-hp-fill"
+                      [class]="hpBarClass(b)"
+                      [style.width.%]="hpPercent(b)"
+                    ></div>
+                  </div>
+                  <span class="bench-hp-text">{{ b.current_hp }}/{{ b.hp }}</span>
+                  <span class="bench-energy">⚡{{ b.attached_energy.length }}</span>
+                </div>
+              }
+              @if (!gameApi.player1?.bench?.length) {
+                <div class="empty-bench">ベンチなし</div>
+              }
+            </div>
+          </div>
+
+          <div class="player-hand-band">
+            <div class="band-title-row">
+              <h3 class="band-title">あなたの手札</h3>
+              <div class="player-hand-actions">
+                <span class="count-pill">{{ gameApi.player1?.hand?.length ?? 0 }}枚</span>
+                @if (state?.selectedCardId) {
+                  <button class="btn-clear" (click)="gameApi.clearSelections()">選択解除</button>
+                }
+              </div>
+            </div>
+            <div class="hand-cards">
+              @for (card of gameApi.player1?.hand; track card.uid) {
+                <div
+                  class="hand-card"
+                  [class.selected]="isHandCardSelected(card.uid)"
+                  [class.energy-card]="card.card_type === 'energy'"
+                  [class.trainer-card]="card.card_type === 'trainer'"
+                  [style.--card-color]="getTypeColor(card.type)"
+                  (click)="selectHandCard(card.uid)"
+                >
+                  <div class="hand-card-bar" [style.background]="getTypeColor(card.type)"></div>
+                  @if (card.image_url) {
+                    <img class="hand-card-img" [src]="card.image_url" [alt]="card.name" />
+                  } @else {
+                    <span class="hand-card-emoji">{{ getTypeEmoji(card.type) }}</span>
+                  }
+                  <span class="hand-card-name">{{ card.name }}</span>
+                  @if (card.card_type === 'pokemon' && card.evolution_stage) {
+                    <span class="hand-card-stage">{{ card.evolution_stage }}</span>
+                  }
+                  @if (card.card_type === 'energy') {
+                    <span class="hand-card-stage"
+                      >{{ card.energy_type === 'basic' ? '基本' : '特殊' }}エネ</span
+                    >
+                  }
+                  @if (card.card_type === 'trainer') {
+                    <span class="hand-card-stage"
+                      >{{ card.trainer_type }}{{ card.is_ace_spec ? ' ★' : '' }}</span
+                    >
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </section>
+
+        <aside class="right-info-column">
+          <div class="resource-panel cpu-resource">
+            <p class="zone-title">CPU 情報</p>
+            <div class="resource-cards">
+              <div class="resource-card back-card">
+                <span class="resource-label">山札</span>
+                <span class="resource-count">{{ gameApi.player2?.deck_count ?? 0 }}</span>
+              </div>
+              <div class="resource-card discard-card">
+                <span class="resource-label">トラッシュ</span>
+                <span class="resource-count">{{ gameApi.player2?.discard_count ?? 0 }}</span>
+              </div>
+              <div class="resource-card prize-card">
+                <span class="resource-label">サイド残</span>
+                <span class="resource-count">{{ gameApi.player2?.prize_remaining ?? 0 }}</span>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- プレイヤーの情報 -->
-        <div class="player-info">
-          <div class="info-item">
-            <span class="info-label">山札:</span>
-            <span class="info-value">{{ player!.deck.length }}枚</span>
+          <div class="resource-panel player-resource">
+            <p class="zone-title">あなたの情報</p>
+            <div class="resource-cards">
+              <div class="resource-card back-card">
+                <span class="resource-label">山札</span>
+                <span class="resource-count">{{ gameApi.player1?.deck_count ?? 0 }}</span>
+              </div>
+              <div class="resource-card discard-card">
+                <span class="resource-label">トラッシュ</span>
+                <span class="resource-count">{{ gameApi.player1?.discard_count ?? 0 }}</span>
+              </div>
+              <div class="resource-card prize-card">
+                <span class="resource-label">サイド残</span>
+                <span class="resource-count">{{ gameApi.player1?.prize_remaining ?? 0 }}</span>
+              </div>
+            </div>
           </div>
-          <div class="info-item">
-            <span class="info-label">手札:</span>
-            <span class="info-value">{{ player!.hand.length }}枚</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">サイド:</span>
-            <span class="info-value">{{ player!.prizes.length }}枚</span>
-          </div>
-        </div>
+
+          @if (gameApi.isPlayerTurn && !state?.isCpuThinking) {
+            <div class="control-dock">
+              @if (state?.error) {
+                <div class="action-error">⚠️ {{ state!.error }}</div>
+              }
+              <div class="action-buttons">
+                @if (canPlaceActive) {
+                  <button class="btn-action btn-place" (click)="placeToActive()">
+                    🏟️ バトル場
+                  </button>
+                }
+                @if (canPlaceBench) {
+                  <button class="btn-action btn-bench" (click)="placeToBench()">🪑 ベンチ</button>
+                }
+                @if (canAttachEnergy) {
+                  @if (gameApi.player1?.active_pokemon && state?.selectedBenchIndex == null) {
+                    <button class="btn-action btn-energy" (click)="attachEnergyToActive()">
+                      ⚡ アクティブ
+                    </button>
+                  }
+                  @if (state?.selectedBenchIndex != null) {
+                    <button
+                      class="btn-action btn-energy"
+                      (click)="attachEnergyToBench(state!.selectedBenchIndex!)"
+                    >
+                      ⚡ ベンチ{{ state!.selectedBenchIndex! + 1 }}
+                    </button>
+                  }
+                }
+                @if (canEvolveActive) {
+                  <button class="btn-action btn-evolve" (click)="evolveActive()">🌟 進化</button>
+                }
+                @if (state?.selectedAttackIndex != null) {
+                  <button class="btn-action btn-attack" (click)="executeAttack()">⚔️ ワザ</button>
+                }
+                <button class="btn-end-turn" (click)="endTurn()">ターン終了</button>
+              </div>
+            </div>
+          }
+        </aside>
       </div>
-
-      <!-- アクションパネル -->
-      @if (isPlayerTurn) {
-        <div class="action-panel">
-          <h3>行動を選択</h3>
-
-          @if (canPlayPokemonActive()) {
-            <button (click)="playPokemon('ACTIVE')" class="btn btn-action">
-              選択したポケモンをアクティブに出す
-            </button>
-          }
-
-          @if (canPlayPokemonBench()) {
-            <button (click)="playPokemon('BENCH')" class="btn btn-action">
-              選択したポケモンをベンチに出す
-            </button>
-          }
-
-          @if (canAttachEnergyActive()) {
-            <button (click)="attachEnergy()" class="btn btn-action">
-              アクティブにエネルギーを付ける
-            </button>
-          }
-
-          @if (canAttachEnergyBench()) {
-            <button (click)="attachEnergy()" class="btn btn-action">
-              ベンチにエネルギーを付ける
-            </button>
-          }
-
-          @if (selectedAttackIndex !== null && player!.activePokemon) {
-            <button (click)="executeAttack()" class="btn btn-attack">ワザを使う</button>
-          }
-
-          @if (selectedSwitchBenchIndex !== null && player!.activePokemon) {
-            <button (click)="switchPokemon()" class="btn btn-switch">入れ替える</button>
-          }
-
-          <button (click)="endTurn()" class="btn btn-end-turn">ターン終了</button>
-        </div>
-      }
     </div>
-    <!-- ゲームログ -->
-    <div class="game-logs" id="game-logs">
-      <h3>ゲームログ</h3>
-      <div class="log-content">
-        <p *ngFor="let log of logs" class="log-entry">{{ log }}</p>
+  }
+
+  <!-- ========== ゲームオーバー画面 ========== -->
+  @if (state?.screen === 'game-over') {
+    <div class="screen game-over-screen">
+      <div class="game-over-card">
+        <div class="game-over-icon">
+          {{ state!.gameState?.winner_id === 'player1' ? '🏆' : '💀' }}
+        </div>
+        <h2 class="game-over-title">
+          {{ state!.gameState?.winner_id === 'player1' ? 'あなたの勝利！' : 'CPUの勝利…' }}
+        </h2>
+        <p class="game-over-sub">{{ state!.gameState?.current_turn }} ターンのバトル</p>
+        <div class="game-over-logs">
+          @for (log of state?.logs?.slice(-5); track $index) {
+            <p class="game-over-log">{{ log }}</p>
+          }
+        </div>
+        <button class="btn-start" (click)="resetGame()">もう一度プレイ</button>
       </div>
     </div>
   }

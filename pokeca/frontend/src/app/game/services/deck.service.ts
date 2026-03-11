@@ -1,17 +1,20 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { Observable, tap } from 'rxjs';
 import { Deck, DeckCreateRequest, DeckUpdateRequest } from '../types/deck.types';
+
+const API_BASE = 'http://localhost:8000/api';
 
 @Injectable({ providedIn: 'root' })
 export class DeckService {
   private http = inject(HttpClient);
-  private baseUrl = `${environment.apiUrl.replace('/api/cards', '')}/api/decks`;
+  private baseUrl = `${API_BASE}/decks`;
 
   /** 全デッキ一覧を取得 */
   getDecks(): Observable<Deck[]> {
-    return this.http.get<Deck[]>(this.baseUrl);
+    return this.http.get<Deck[]>(this.baseUrl).pipe(
+      tap((decks) => console.log('デッキ一覧取得成功:', decks?.length, '件')),
+    );
   }
 
   /** デッキを新規作成 */

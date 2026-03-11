@@ -1,0 +1,306 @@
+[
+  {
+    "name": "モクロー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/M3/049643_P_MOKURO.jpg",
+    "list_index": 9,
+    "hp": 80,
+    "type": "草",
+    "evolution_stage": "たね",
+    "attacks": [
+      {
+        "name": "ともだちをさがす",
+        "energy": [
+          "草"
+        ],
+        "energy_count": 1,
+        "damage": 0,
+        "description": "自分の山札からポケモンを1枚選び、相手に見せて、手札に加える。そして山札を切る。"
+      },
+      {
+        "name": "たいあたり",
+        "energy": [
+          "無色",
+          "無色",
+          "無色"
+        ],
+        "energy_count": 3,
+        "damage": 30,
+        "description": ""
+      }
+    ],
+    "weakness": "炎",
+    "resistance": null,
+    "retreat_cost": 2
+  },
+  {
+    "name": "フクスロー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/M3/049644_P_FUKUSURO.jpg",
+    "list_index": 10,
+    "hp": 100,
+    "type": "草",
+    "evolution_stage": "1 進化",
+    "attacks": [
+      {
+        "name": "このは",
+        "energy": [
+          "草"
+        ],
+        "energy_count": 1,
+        "damage": 20,
+        "description": ""
+      },
+      {
+        "name": "フェザーショット",
+        "energy": [
+          "無色",
+          "無色",
+          "無色"
+        ],
+        "energy_count": 3,
+        "damage": 0,
+        "description": "このポケモンについているエネルギーをすべてトラッシュし、相手のポケモン1匹に、90ダメージ。［ベンチは弱点・抵抗力を計算しない。］"
+      }
+    ],
+    "weakness": "炎",
+    "resistance": null,
+    "retreat_cost": 2
+  },
+  {
+    "name": "ジュナイパーex",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/M3/049645_P_JIXYUNAIPAEX.jpg",
+    "list_index": 11,
+    "hp": 320,
+    "type": "草",
+    "evolution_stage": "2 進化",
+    "attacks": [
+      {
+        "name": "スナイパーアイ",
+        "energy": [],
+        "energy_count": 0,
+        "damage": 0,
+        "description": "相手の手札が4枚なら、このポケモンはワザを使うためのエネルギーが、すべてなくなる。"
+      },
+      {
+        "name": "クラッシュアロー",
+        "energy": [
+          "草",
+          "無色",
+          "無色",
+          "無色"
+        ],
+        "energy_count": 4,
+        "damage": 240,
+        "description": "相手のバトルポケモンについているエネルギーを1個選び、トラッシュする。"
+      }
+    ],
+    "weakness": "炎",
+    "resistance": null,
+    "retreat_cost": 2
+  },
+  {
+    "name": "ヒノヤコマ",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/M3/049646_P_HINOYAKOMA.jpg",
+    "list_index": 12,
+    "hp": 90,
+    "type": "炎",
+    "evolution_stage": "1 進化",
+    "attacks": [
+      {
+        "name": "ほのお",
+        "energy": [
+          "炎",
+          "炎"
+        ],
+        "energy_count": 2,
+        "damage": 60,
+        "description": ""
+      }
+    ],
+    "weakness": null,
+    "resistance": {
+      "type": "闘",
+      "value": "-20"
+    },
+    "retreat_cost": 1
+  },
+  {
+    "name": "ファイアロー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/M3/049647_P_FUAIARO.jpg",
+    "list_index": 13,
+    "hp": 150,
+    "type": "炎",
+    "evolution_stage": "2 進化",
+    "attacks": [
+      {
+        "name": "スカイハント",
+        "energy": [],
+        "energy_count": 0,
+        "damage": 0,
+        "description": "自分の番に1回使える。コインを1回投げオモテなら、相手の手札からオモテを見ないで1枚選び、トラッシュする。"
+      },
+      {
+        "name": "ほのおのつばさ",
+        "energy": [
+          "炎",
+          "炎"
+        ],
+        "energy_count": 2,
+        "damage": 110,
+        "description": ""
+      }
+    ],
+    "weakness": null,
+    "resistance": {
+      "type": "闘",
+      "value": "-20"
+    },
+    "retreat_cost": 1
+  },
+  {
+    "name": "ヤトウモリ",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/M3/049648_P_YATOUMORI.jpg",
+    "list_index": 14,
+    "hp": 70,
+    "type": "炎",
+    "evolution_stage": "たね",
+    "attacks": [
+      {
+        "name": "ほのおのツメ",
+        "energy": [
+          "炎"
+        ],
+        "energy_count": 1,
+        "damage": 20,
+        "description": ""
+      }
+    ],
+    "weakness": "水",
+    "resistance": null,
+    "retreat_cost": 1
+  },
+  {
+    "name": "エンニュートex",
+    "image_url": "https://www.pokemon-card.comdata:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+    "list_index": 15,
+    "hp": 260,
+    "type": "炎",
+    "evolution_stage": "1 進化",
+    "attacks": [
+      {
+        "name": "わるだくみ",
+        "energy": [
+          "炎"
+        ],
+        "energy_count": 1,
+        "damage": 0,
+        "description": "自分の山札から好きなカードを2枚まで選び、手札に加える。そして山札を切る。"
+      },
+      {
+        "name": "フェイタルネイル",
+        "energy": [
+          "炎",
+          "炎"
+        ],
+        "energy_count": 2,
+        "damage": 100,
+        "description": "相手のバトルポケモンをどくとやけどにする。このポケモンをベンチポケモンと入れ替える。"
+      }
+    ],
+    "weakness": "水",
+    "resistance": null,
+    "retreat_cost": 1
+  },
+  {
+    "name": "バクガメス",
+    "image_url": "https://www.pokemon-card.comdata:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+    "list_index": 16,
+    "hp": 120,
+    "type": "炎",
+    "evolution_stage": "たね",
+    "attacks": [
+      {
+        "name": "こうらのトゲ",
+        "energy": [],
+        "energy_count": 0,
+        "damage": 0,
+        "description": "このポケモンが、バトル場で相手のポケモンからワザのダメージを受けたとき、ワザを使ったポケモンについているエネルギーを1個選び、トラッシュする。"
+      },
+      {
+        "name": "ヒートブレス\n80＋",
+        "energy": [
+          "炎",
+          "炎",
+          "無色"
+        ],
+        "energy_count": 3,
+        "damage": 0,
+        "description": "コインを1回投げオモテなら、80ダメージ追加。"
+      }
+    ],
+    "weakness": "水",
+    "resistance": null,
+    "retreat_cost": 2
+  },
+  {
+    "name": "パウワウ",
+    "image_url": "https://www.pokemon-card.comdata:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+    "list_index": 17,
+    "hp": 80,
+    "type": "水",
+    "evolution_stage": "たね",
+    "attacks": [
+      {
+        "name": "みずかけ",
+        "energy": [
+          "水"
+        ],
+        "energy_count": 1,
+        "damage": 10,
+        "description": ""
+      },
+      {
+        "name": "スプラッシュ",
+        "energy": [
+          "水",
+          "水"
+        ],
+        "energy_count": 2,
+        "damage": 30,
+        "description": ""
+      }
+    ],
+    "weakness": null,
+    "resistance": null,
+    "retreat_cost": 2
+  },
+  {
+    "name": "ジュゴン",
+    "image_url": "https://www.pokemon-card.comdata:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+    "list_index": 18,
+    "hp": 130,
+    "type": "水",
+    "evolution_stage": "1 進化",
+    "attacks": [
+      {
+        "name": "おしながす",
+        "energy": [],
+        "energy_count": 0,
+        "damage": 0,
+        "description": "自分の番に何回でも使える。自分のベンチポケモンについているエネルギーを1個選び、バトルポケモンにつけ替える。"
+      },
+      {
+        "name": "スプラッシュ",
+        "energy": [
+          "水",
+          "水"
+        ],
+        "energy_count": 2,
+        "damage": 60,
+        "description": ""
+      }
+    ],
+    "weakness": null,
+    "resistance": null,
+    "retreat_cost": 2
+  }
+]

@@ -39,8 +39,8 @@ def place_to_active(game_state: GameState, player_id: str, card_id: int) -> dict
     if card.evolution_stage != "たね":
         return {"success": False, "message": f"バトル場にはたねポケモンのみ出せます: {card.name}"}
 
-    # 手札から取り出してバトル場へ
-    player.hand = [c for c in player.hand if c.id != card_id]
+    # 手札から取り出してバトル場へ（uidで特定の1枚を除去）
+    player.hand = [c for c in player.hand if c.uid != card.uid]
     player.active_pokemon = ActivePokemon(card=card, turns_in_play=0)
 
     game_state.add_log("PLACE_ACTIVE", f"{player_id}: {card.name}をバトル場に出した")
@@ -77,8 +77,8 @@ def place_to_bench(game_state: GameState, player_id: str, card_id: int) -> dict:
     if card.evolution_stage != "たね":
         return {"success": False, "message": f"ベンチにはたねポケモンのみ出せます: {card.name}"}
 
-    # 手札から取り出してベンチへ
-    player.hand = [c for c in player.hand if c.id != card_id]
+    # 手札から取り出してベンチへ（uidで特定の1枚を除去）
+    player.hand = [c for c in player.hand if c.uid != card.uid]
     player.bench.append(BenchPokemon(card=card, turns_in_play=0))
 
     game_state.add_log("PLACE_BENCH", f"{player_id}: {card.name}をベンチに出した")
@@ -86,8 +86,8 @@ def place_to_bench(game_state: GameState, player_id: str, card_id: int) -> dict:
 
 
 def _find_card_in_hand(player, card_id: int):
-    """手札からcard_idに一致するカードを返す（なければNone）"""
+    """手札からuidに一致するカードを返す（なければNone）"""
     for card in player.hand:
-        if card.id == card_id:
+        if card.uid == card_id:
             return card
     return None

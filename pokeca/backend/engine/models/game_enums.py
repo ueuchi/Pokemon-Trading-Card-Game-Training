@@ -52,3 +52,44 @@ class DamageType(str, Enum):
     """攻撃のダメージ種別"""
     NORMAL = "normal"          # 通常ダメージ（弱点・抵抗力計算あり）
     COUNTER = "counter"        # ダメージカウンター型（計算なし）
+
+
+class AtomicEffectType(str, Enum):
+    """原子効果の種別（1ワザ内の最小効果単位）"""
+
+    # ダメージ系
+    BENCH_DAMAGE    = "bench_damage"       # ベンチのポケモンにダメージ
+    SELF_DAMAGE     = "self_damage"        # 自分のバトルポケモンにダメージ
+    EXTRA_DAMAGE    = "extra_damage"       # 条件付き追加ダメージ
+    DAMAGE_REDUCE   = "damage_reduce"      # 次に受けるダメージを軽減
+
+    # 状態異常系
+    POISON          = "poison"             # どく
+    BURN            = "burn"               # やけど
+    PARALYSIS       = "paralysis"          # マヒ
+    SLEEP           = "sleep"              # ねむり
+    CONFUSION       = "confusion"          # こんらん
+    CANT_RETREAT    = "cant_retreat"       # 逃げられない
+
+    # 回復系
+    HEAL_SELF       = "heal_self"          # 自分のバトルポケモンを回復
+    HEAL_BENCH      = "heal_bench"         # ベンチポケモンを回復
+
+    # 山札・手札操作系
+    DRAW            = "draw"               # 山札からN枚引く
+    DISCARD_HAND    = "discard_hand"       # 手札からN枚捨てる
+    SEARCH_POKEMON  = "search_pokemon"     # 山札からポケモンをサーチして手札に
+    SEARCH_ENERGY   = "search_energy"      # 山札からエネルギーをサーチ
+
+    # エネルギー操作系
+    ATTACH_ENERGY   = "attach_energy"      # エネルギーをポケモンに付ける
+    DISCARD_ENERGY  = "discard_energy"     # 付いているエネルギーを捨てる
+
+    # コントロール系
+    CANT_ATTACK     = "cant_attack"        # 次の自分の番ワザが使えない
+
+    # 条件分岐
+    COIN_FLIP       = "coin_flip"          # コイン → オモテ/ウラで別効果を発動
+
+    # 個別実装が必要な固有効果
+    CUSTOM          = "custom"             # カード固有の特殊処理

@@ -1,6 +1,6 @@
 /**
  * ゲーム全体の状態を表す型定義
- *
+ * 
  * 設計方針：
  * - 純粋なデータ構造（関数を持たない）
  * - Immutableを前提とする（状態更新は新しいオブジェクトを作る）
@@ -10,35 +10,21 @@
 /**
  * カードの種類
  */
-export type CardType = 'POKEMON' | 'TRAINER' | 'ENERGY';
+export type CardType = 'POKEMON' | 'ENERGY' | 'TRAINER';
 
 /**
  * エネルギーの色
  */
-export type EnergyType =
-  | 'FIRE'
-  | 'WATER'
-  | 'GRASS'
-  | 'ELECTRIC'
-  | 'FIGHT'
-  | 'SUPER'
-  | 'DARK'
-  | 'COLORLESS'
-  | 'SPECIAL';
-
-/**
- * トレーナーズの種類
- */
-export type TrainerType = 'GOODS' | 'SUPPORT' | 'STADIUM' | 'TOOL';
+export type EnergyType = 'FIRE' | 'WATER' | 'GRASS' | 'ELECTRIC' | 'COLORLESS';
 
 /**
  * カードの基本構造
  * すべてのカードが持つ共通プロパティ
  */
 export interface BaseCard {
-  id: string; // カードのユニークID（例: "pikachu-001"）
-  name: string; // カード名
-  type: CardType; // カードの種類
+  id: string;           // カードのユニークID（例: "pikachu-001"）
+  name: string;         // カード名
+  type: CardType;       // カードの種類
 }
 
 /**
@@ -47,12 +33,10 @@ export interface BaseCard {
  */
 export interface PokemonCard extends BaseCard {
   type: 'POKEMON';
-  evolution: 'BASIC' | 'STAGE1' | 'STAGE2'; // 進化段階
-  hp: number; // 最大HP
-  energyType: EnergyType; // ポケモンのタイプ
-  character?: string; // 特性名
-  attacks: Attack[]; // 使えるワザ（最大2個程度）
-  retreatCost: number; // 逃げるコスト（簡略化のため数値のみ）
+  hp: number;                    // 最大HP
+  energyType: EnergyType;        // ポケモンのタイプ
+  attacks: Attack[];             // 使えるワザ（最大2個程度）
+  retreatCost: number;           // 逃げるコスト（簡略化のため数値のみ）
 }
 
 /**
@@ -60,14 +44,10 @@ export interface PokemonCard extends BaseCard {
  * ポケモンが使える攻撃
  */
 export interface Attack {
-  name: string; // ワザの名前
-  energyCost: EnergyCost[]; // 必要なエネルギー
-  effects: Effect[]; // ワザの効果（再利用可能な部品）
+  name: string;                  // ワザの名前
+  energyCost: EnergyCost[];      // 必要なエネルギー
+  effects: Effect[];             // ワザの効果（再利用可能な部品）
 }
-
-export type Target1 = 'SELF' | 'ENEMY' | 'ALL';
-export type Target2 = 'BATTLE' | 'BENCH' | 'ALL';
-export type Target3 = 'DECK' | 'TRASH' | 'HAND';
 
 /**
  * エネルギーコスト
@@ -101,26 +81,26 @@ export type Card = PokemonCard | EnergyCard | TrainerCard;
 
 /**
  * Effect（効果）システム
- *
+ * 
  * 設計思想：
  * - カードの効果は「再利用可能な部品」の組み合わせ
  * - 自由入力を禁止し、定義済みの効果タイプのみ使用
  * - 数値や条件は選択式
  */
-export type EffectType =
-  | 'DAMAGE' // ダメージを与える
-  | 'HEAL' // HPを回復
-  | 'DRAW' // カードを引く
-  | 'ENERGY_ATTACH' // エネルギーを付ける
-  | 'CONDITIONAL'; // 条件付き効果
+export type EffectType = 
+  | 'DAMAGE'              // ダメージを与える
+  | 'HEAL'                // HPを回復
+  | 'DRAW'                // カードを引く
+  | 'ENERGY_ATTACH'       // エネルギーを付ける
+  | 'CONDITIONAL';        // 条件付き効果
 
 /**
  * ダメージ効果
  */
 export interface DamageEffect {
   type: 'DAMAGE';
-  amount: number; // ダメージ量
-  target: 'ACTIVE'; // 対象（今回は相手のアクティブのみ）
+  amount: number;         // ダメージ量
+  target: 'ACTIVE';       // 対象（今回は相手のアクティブのみ）
 }
 
 /**
@@ -129,7 +109,7 @@ export interface DamageEffect {
 export interface HealEffect {
   type: 'HEAL';
   amount: number;
-  target: 'SELF'; // 自分自身
+  target: 'SELF';         // 自分自身
 }
 
 /**
@@ -137,7 +117,7 @@ export interface HealEffect {
  */
 export interface DrawEffect {
   type: 'DRAW';
-  amount: number; // 引く枚数
+  amount: number;         // 引く枚数
 }
 
 /**
@@ -145,9 +125,9 @@ export interface DrawEffect {
  */
 export interface ConditionalEffect {
   type: 'CONDITIONAL';
-  condition: 'COIN_FLIP'; // 今回はコイン投げのみ
-  successEffects: Effect[]; // 成功時の効果
-  failEffects?: Effect[]; // 失敗時の効果（オプション）
+  condition: 'COIN_FLIP';           // 今回はコイン投げのみ
+  successEffects: Effect[];         // 成功時の効果
+  failEffects?: Effect[];           // 失敗時の効果（オプション）
 }
 
 /**
@@ -161,22 +141,22 @@ export type Effect = DamageEffect | HealEffect | DrawEffect | ConditionalEffect;
  */
 export interface FieldPokemon {
   card: PokemonCard;
-  currentHp: number; // 現在のHP
-  attachedEnergy: EnergyCard[]; // 付いているエネルギー
-  damageCounters: number; // ダメージカウンター（currentHpから計算可能だが明示）
+  currentHp: number;                // 現在のHP
+  attachedEnergy: EnergyCard[];     // 付いているエネルギー
+  damageCounters: number;           // ダメージカウンター（currentHpから計算可能だが明示）
 }
 
 /**
  * プレイヤーの状態
  */
 export interface Player {
-  id: 'PLAYER' | 'CPU'; // プレイヤーID
-  deck: Card[]; // 山札
-  hand: Card[]; // 手札
+  id: 'PLAYER' | 'CPU';             // プレイヤーID
+  deck: Card[];                      // 山札
+  hand: Card[];                      // 手札
   activePokemon: FieldPokemon | null; // アクティブポケモン（1体のみ）
-  bench: FieldPokemon[]; // ベンチ（簡略版では使わないかも）
-  prizes: Card[]; // サイドカード（簡略版では数だけでもOK）
-  discardPile: Card[]; // トラッシュ
+  bench: FieldPokemon[];             // ベンチ（簡略版では使わないかも）
+  prizes: Card[];                    // サイドカード（簡略版では数だけでもOK）
+  discardPile: Card[];               // トラッシュ
 }
 
 /**
@@ -188,30 +168,30 @@ export interface GameState {
     PLAYER: Player;
     CPU: Player;
   };
-  currentTurn: 'PLAYER' | 'CPU'; // 現在のターン
-  turnCount: number; // ターン数
-  phase: GamePhase; // 現在のフェーズ
-  gameStatus: GameStatus; // ゲームの状態
-  winner: 'PLAYER' | 'CPU' | null; // 勝者（ゲーム終了時）
+  currentTurn: 'PLAYER' | 'CPU';    // 現在のターン
+  turnCount: number;                 // ターン数
+  phase: GamePhase;                  // 現在のフェーズ
+  gameStatus: GameStatus;            // ゲームの状態
+  winner: 'PLAYER' | 'CPU' | null;   // 勝者（ゲーム終了時）
 }
 
 /**
  * ゲームフェーズ
  * ターン内でどの段階にいるか
  */
-export type GamePhase =
-  | 'SETUP' // セットアップ（最初の手札配布など）
-  | 'DRAW' // ドローフェーズ
-  | 'MAIN' // メインフェーズ（行動可能）
-  | 'END'; // ターン終了
+export type GamePhase = 
+  | 'SETUP'           // セットアップ（最初の手札配布など）
+  | 'DRAW'            // ドローフェーズ
+  | 'MAIN'            // メインフェーズ（行動可能）
+  | 'END';            // ターン終了
 
 /**
  * ゲームの状態
  */
-export type GameStatus =
-  | 'NOT_STARTED' // 未開始
-  | 'IN_PROGRESS' // 進行中
-  | 'FINISHED'; // 終了
+export type GameStatus = 
+  | 'NOT_STARTED'     // 未開始
+  | 'IN_PROGRESS'     // 進行中
+  | 'FINISHED';       // 終了
 
 /**
  * ゲーム初期化時の設定
@@ -219,6 +199,6 @@ export type GameStatus =
 export interface GameConfig {
   playerDeck: Card[];
   cpuDeck: Card[];
-  prizeCount: number; // サイドの枚数（通常6枚、簡略版では3枚など）
-  handSize: number; // 初期手札枚数（通常7枚）
+  prizeCount: number;    // サイドの枚数（通常6枚、簡略版では3枚など）
+  handSize: number;      // 初期手札枚数（通常7枚）
 }

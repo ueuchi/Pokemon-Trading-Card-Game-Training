@@ -1,0 +1,177 @@
+[
+  {
+    "name": "基本草エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/MC/049459_E_KIHONKUSAENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0001_基本草エネルギー.jpg"
+  },
+  {
+    "name": "基本炎エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/MC/049460_E_KIHONHONOOENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0002_基本炎エネルギー.jpg"
+  },
+  {
+    "name": "基本水エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/MC/049461_E_KIHONMIZUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0003_基本水エネルギー.jpg"
+  },
+  {
+    "name": "基本雷エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/MC/049462_E_KIHONKAMINARIENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0004_基本雷エネルギー.jpg"
+  },
+  {
+    "name": "基本超エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/MC/049463_E_KIHONCHIXYOUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0005_基本超エネルギー.jpg"
+  },
+  {
+    "name": "基本闘エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/MC/049464_E_KIHONTOUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0006_基本闘エネルギー.jpg"
+  },
+  {
+    "name": "基本悪エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/MC/049465_E_KIHONAKUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0007_基本悪エネルギー.jpg"
+  },
+  {
+    "name": "基本鋼エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/MC/049466_E_KIHONHAGANEENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0008_基本鋼エネルギー.jpg"
+  },
+  {
+    "name": "基本超エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/ENE/048307_E_KIHONCHIXYOUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0009_基本超エネルギー.jpg"
+  },
+  {
+    "name": "基本悪エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/ENE/048284_E_KIHONAKUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0010_基本悪エネルギー.jpg"
+  },
+  {
+    "name": "基本草エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/ENE/047903_E_KIHONKUSAENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0011_基本草エネルギー.jpg"
+  },
+  {
+    "name": "基本炎エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/ENE/047904_E_KIHONHONOOENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0012_基本炎エネルギー.jpg"
+  },
+  {
+    "name": "基本水エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/ENE/047905_E_KIHONMIZUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0013_基本水エネルギー.jpg"
+  },
+  {
+    "name": "基本雷エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/ENE/047906_E_KIHONKAMINARIENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0014_基本雷エネルギー.jpg"
+  },
+  {
+    "name": "基本超エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/ENE/047907_E_KIHONCHIXYOUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0015_基本超エネルギー.jpg"
+  },
+  {
+    "name": "基本闘エネルギー",
+    "image_url": "https://www.pokemon-card.comdata:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0016_基本闘エネルギー.jpg"
+  },
+  {
+    "name": "基本超エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/SVI/045465_P_KIHONCHIXYOUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0017_基本超エネルギー.jpg"
+  },
+  {
+    "name": "基本闘エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/SVI/045513_P_KIHONTOUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0018_基本闘エネルギー.jpg"
+  },
+  {
+    "name": "基本悪エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/SVI/045490_P_KIHONAKUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0019_基本悪エネルギー.jpg"
+  },
+  {
+    "name": "基本鋼エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/SVI/045514_P_KIHONHAGANEENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0020_基本鋼エネルギー.jpg"
+  },
+  {
+    "name": "基本悪エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/SV4K/044971_E_KIHONAKUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0021_基本悪エネルギー.jpg"
+  },
+  {
+    "name": "基本鋼エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/SV4M/044974_E_KIHONHAGANEENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0022_基本鋼エネルギー.jpg"
+  },
+  {
+    "name": "基本炎エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/SV3/044965_E_KIHONHONOOENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0023_基本炎エネルギー.jpg"
+  },
+  {
+    "name": "基本雷エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/WCS23/044023_E_KIHONKAMINARIENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0024_基本雷エネルギー.jpg"
+  },
+  {
+    "name": "基本闘エネルギー",
+    "image_url": "https://www.pokemon-card.com/assets/images/card_images/large/WCS23/044024_E_KIHONTOUENERUGI.jpg",
+    "detail_url": "",
+    "page": 1,
+    "local_path": "data/scraped/processed/energy/0025_基本闘エネルギー.jpg"
+  }
+]

@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardService } from '../../game/services/card.service';
@@ -38,7 +38,10 @@ export class CardListComponent implements OnInit {
 
   readonly cardTypes = CARD_TYPES;
 
-  constructor(private cardService: CardService) {}
+  constructor(
+    private cardService: CardService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.loadCards();
@@ -52,11 +55,13 @@ export class CardListComponent implements OnInit {
         this.cards = cards;
         this.applyFilter();
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.errorMessage =
           'カードの取得に失敗しました。バックエンドが起動しているか確認してください。';
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -87,8 +92,14 @@ export class CardListComponent implements OnInit {
     return getTypeColor(type);
   }
 
-  getCategoryLabel(stage: string | null): string {
-    return getCardCategoryLabel(stage);
+  getCategoryLabel(card: PokemonCard): string {
+    return getCardCategoryLabel(card.evolution_stage, card.card_type);
+  }
+
+  /** 表示用タイプ文字列を返す（エネルギーカードは energy_type を使用）*/
+  getDisplayType(card: PokemonCard): string | null {
+    if (card.card_type === 'energy') return card.energy_type ?? null;
+    return card.type;
   }
 
   getAttackNames(card: PokemonCard): string {
