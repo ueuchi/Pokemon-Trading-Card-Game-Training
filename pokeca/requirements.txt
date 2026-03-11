@@ -25,3 +25,9 @@ pytest-asyncio==0.23.3
 
 # その他
 python-dotenv==1.0.0
+
+# RL / CPU battle AI
+stable-baselines3==2.3.2
+gymnasium==0.29.1
+torch==2.3.1
+numpy==1.26.4

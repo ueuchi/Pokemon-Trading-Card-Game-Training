@@ -11,6 +11,7 @@ CPU対戦 FastAPI エンドポイント
   DELETE /api/game/cpu/{game_id}              セッション削除
 """
 import json
+import os
 from copy import deepcopy
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -33,6 +34,8 @@ from database.connection import get_db_connection
 from repositories.card_repository import CardRepository
 
 router = APIRouter(prefix="/api/game/cpu", tags=["CPU対戦"])
+
+_ppo_cpu_player = None
 
 
 # ==================== リクエストモデル ====================
@@ -111,6 +114,41 @@ def _get_cpu_deck(conn) -> list:
     if not row:
         raise HTTPException(status_code=400, detail="DBにデッキがありません。先にデッキを作成してください")
     return _load_deck_from_db(conn, row["id"])
+
+
+def _run_cpu_turn(game_state) -> list:
+    """CPUターンを実行。PPO有効時はモデル推論、失敗時はヒューリスティックへフォールバック。"""
+    global _ppo_cpu_player
+
+    mode = os.getenv("CPU_AI_MODE", "heuristic").lower()
+    model_path = os.getenv("CPU_AI_MODEL_PATH", "").strip()
+
+    actions = []
+    if mode == "ppo" and model_path:
+        try:
+            if _ppo_cpu_player is None:
+                from cpu.game_integration import CPUPlayer
+
+                _ppo_cpu_player = CPUPlayer(model_path=model_path, player_id="player2")
+            actions = _ppo_cpu_player.play_turn(game_state)
+        except Exception as e:
+            actions.append(
+                {
+                    "action": "CPU_MODEL_FALLBACK",
+                    "success": False,
+                    "message": f"PPO推論に失敗したため通常CPUへ切替: {e}",
+                }
+            )
+            actions.extend(cpu_take_turn(game_state))
+    else:
+        actions = cpu_take_turn(game_state)
+
+    p2 = game_state.player2
+    if not p2.has_active and p2.has_bench_pokemon and not game_state.is_game_over:
+        replace = cpu_choose_active_after_faint(game_state)
+        actions.append({"action": "CPU_REPLACE_ACTIVE", **replace})
+
+    return actions
 
 
 # ==================== エンドポイント ====================
@@ -195,11 +233,7 @@ async def place_initial(game_id: str, request: PlaceInitialRequest):
         # 先行がCPUなら即ターン実行
         cpu_actions = []
         if game_state.current_player_id == "player2":
-            cpu_actions = cpu_take_turn(game_state)
-            p2 = game_state.player2
-            if not p2.has_active and p2.has_bench_pokemon and not game_state.is_game_over:
-                replace = cpu_choose_active_after_faint(game_state)
-                cpu_actions.append({"action": "CPU_REPLACE_ACTIVE", **replace})
+            cpu_actions = _run_cpu_turn(game_state)
 
         return {
             "message": "ゲーム開始！",
@@ -289,11 +323,7 @@ async def player_end_turn(game_id: str):
 
     cpu_actions = []
     if not game_state.is_game_over:
-        cpu_actions = cpu_take_turn(game_state)
-        p2 = game_state.player2
-        if not p2.has_active and p2.has_bench_pokemon and not game_state.is_game_over:
-            replace = cpu_choose_active_after_faint(game_state)
-            cpu_actions.append({"action": "CPU_REPLACE_ACTIVE", **replace})
+        cpu_actions = _run_cpu_turn(game_state)
 
     return {
         "end_result": end_result,
