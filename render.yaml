@@ -5,8 +5,17 @@ services:
     rootDir: pokeca/backend
     plan: free
     pythonVersion: 3.11.8
-    buildCommand: pip install -r requirements.txt && python -m database.setup
-    startCommand: python main.py
+    buildCommand: |
+      if [ -d pokeca/backend ]; then
+        cd pokeca/backend
+      fi
+      pip install -r requirements.txt
+      python database/setup.py
+    startCommand: |
+      if [ -d pokeca/backend ]; then
+        cd pokeca/backend
+      fi
+      python main.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.8
