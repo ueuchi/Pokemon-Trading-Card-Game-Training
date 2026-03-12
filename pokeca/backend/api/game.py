@@ -11,7 +11,6 @@ CPU対戦 FastAPI エンドポイント
   DELETE /api/game/cpu/{game_id}              セッション削除
 """
 import json
-import os
 from copy import deepcopy
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -28,14 +27,14 @@ from engine.actions.trainer import use_supporter, use_goods, use_stadium
 from engine.actions.attack import declare_attack
 from engine.actions.faint import send_to_active_from_bench
 from engine.deck_validator import validate_deck
-from cpu.cpu_ai import cpu_take_turn, cpu_choose_active_after_faint
+from cpu.cpu_runtime import CpuRuntime
 from cpu.game_session import create_session, get_session, delete_session
 from database.connection import get_db_connection
 from repositories.card_repository import CardRepository
 
 router = APIRouter(prefix="/api/game/cpu", tags=["CPU対戦"])
 
-_ppo_cpu_player = None
+_cpu_runtime = CpuRuntime(player_id="player2")
 
 
 # ==================== リクエストモデル ====================
@@ -117,38 +116,11 @@ def _get_cpu_deck(conn) -> list:
 
 
 def _run_cpu_turn(game_state) -> list:
-    """CPUターンを実行。PPO有効時はモデル推論、失敗時はヒューリスティックへフォールバック。"""
-    global _ppo_cpu_player
+    """CPUターンを実行する共通入口。
 
-    mode = os.getenv("CPU_AI_MODE", "heuristic").lower()
-    model_path = os.getenv("CPU_AI_MODEL_PATH", "").strip()
-
-    actions = []
-    if mode == "ppo" and model_path:
-        try:
-            if _ppo_cpu_player is None:
-                from cpu.game_integration import CPUPlayer
-
-                _ppo_cpu_player = CPUPlayer(model_path=model_path, player_id="player2")
-            actions = _ppo_cpu_player.play_turn(game_state)
-        except Exception as e:
-            actions.append(
-                {
-                    "action": "CPU_MODEL_FALLBACK",
-                    "success": False,
-                    "message": f"PPO推論に失敗したため通常CPUへ切替: {e}",
-                }
-            )
-            actions.extend(cpu_take_turn(game_state))
-    else:
-        actions = cpu_take_turn(game_state)
-
-    p2 = game_state.player2
-    if not p2.has_active and p2.has_bench_pokemon and not game_state.is_game_over:
-        replace = cpu_choose_active_after_faint(game_state)
-        actions.append({"action": "CPU_REPLACE_ACTIVE", **replace})
-
-    return actions
+    実行戦略はCpuRuntimeが管理し、将来のCPU差し替えを容易にする。
+    """
+    return _cpu_runtime.play_turn(game_state)
 
 
 # ==================== エンドポイント ====================

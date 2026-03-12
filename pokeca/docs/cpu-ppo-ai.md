@@ -9,6 +9,7 @@
 - backend/cpu/selfplay_trainer.py
 - backend/cpu/game_integration.py
 - backend/cpu/evaluate_agent.py
+- backend/cpu/cpu_runtime.py
 
 ## 2. アーキテクチャ概要
 
@@ -81,35 +82,38 @@
 
 battle_env.py で以下インターフェースを定義:
 
-- get_state() -> np.ndarray
-  - 128次元のfloat32観測ベクトル
-- get_valid_actions() -> set[int]
-  - 現在状態で選択可能な action_id 集合
-- apply_action(action_id: int) -> ActionOutcome
-  - 行動適用結果（成功/失敗、報酬計算用情報含む）
-- is_over() -> bool
-  - ゲーム終了判定
+- 128次元のfloat32観測ベクトル
+- 現在状態で選択可能な action_id 集合
+- 行動適用結果（成功/失敗、報酬計算用情報含む）
+- ゲーム終了判定
 
 ## 4. Action ID定義（20個）
-
-- 0: 攻撃0
-- 1: 攻撃1
-- 2-11: 手札スロット0-9を使用
-- 12: 逃げる
-- 13-18: ベンチ候補0-5へ交代/補充
-- 19: ターン終了
 
 ## 5. API統合（CPU対戦）
 
 backend/api/game.py にCPU実行ヘルパーを追加。
 
+現在は cpu_runtime.py を経由してCPUを実行する構成。
+
+この層を1箇所に置くことで、将来のCPU戦略追加時は
+cpu_runtime.py の policy を増やすだけでAPI側変更を最小化できる。
+
 切替方式:
 
 - CPU_AI_MODE=heuristic（デフォルト）
-  - 従来ルールベースCPUを使用
+- CPU_AI_MODE=rule_plus
+  - 強化ルールベースCPUを使用（盤面判定でHARD/NORMAL切替 + 停滞時リカバリ）
+  - 追加調整:
+    - CPU_RULE_PLUS_WEIGHTS で判定重みをJSON指定
+    - CPU_RULE_PLUS_HARD_THRESHOLD でHARD選択閾値を指定
 - CPU_AI_MODE=ppo
   - CPU_AI_MODEL_PATH が設定されていればPPO推論を使用
   - 読み込み失敗時は自動でheuristicへフォールバック
+
+rule_plus 重み指定例:
+
+- CPU_RULE_PLUS_WEIGHTS={"side_behind":1.2,"can_attack":1.6,"opponent_low_hp":1.0,"self_low_hp_penalty":1.4}
+- CPU_RULE_PLUS_HARD_THRESHOLD=2.4
 
 ## 6. 学習・実行の例
 
