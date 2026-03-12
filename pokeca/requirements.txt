@@ -8,7 +8,7 @@ lxml==5.1.0
 # バックエンドAPI
 fastapi==0.109.0
 uvicorn==0.27.0
-pydantic==2.7.4
+pydantic==1.10.13
 
 # データ検証・変換
 python-multipart==0.0.6
