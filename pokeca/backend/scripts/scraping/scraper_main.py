@@ -1,11 +1,17 @@
 """
 ポケモンカードスクレイパー
 スクレイピング実行コマンド
+cd backend
+seleniumがインストールされていなかった場合は以下を実行
+source .venv/bin/activate
+pip3 install selenium
+
 python3 scripts/scraping/scraper_main.py
 
 スクレイピング後、以下を実行
-python3 scripts/import_regulation_cards.py \
-  --file backend/data/scraped/raw/pokemon_cards.json
+python3 scripts/import_regulation_cards.py --file backend/data/scraped/raw/pokemon_cards.json
+
+取得はstartIndexとendIndexで指定した範囲のみ。startIndexは1始まり、endIndexはexclusive。末尾まで取得する場合は Noneを指定。
 
 """
 
@@ -31,6 +37,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 # ---------------------------------------------------------------------------
 # 定数
 # ---------------------------------------------------------------------------
+
+# 取得始まり
+startIndex = 0
+# 取得終わり
+endIndex = 10
 
 BASE_URL = "https://www.pokemon-card.com"
 CARD_SEARCH_URL = f"{BASE_URL}/card-search/"
@@ -452,8 +463,8 @@ def main() -> None:
     print("=" * 60)
 
     # ===== スクレイピング範囲の設定 =====
-    START_INDEX = 19   # 開始位置（1 始まり）
-    END_INDEX   = 20   # 終了位置（exclusive）。末尾まで取得する場合は None
+    START_INDEX = startIndex   # 開始位置（1 始まり）
+    END_INDEX   = endIndex   # 終了位置（exclusive）。末尾まで取得する場合は None
     OUTPUT_PATH = DEBUG_DIR / "pokemon_cards.json"
     # ======================================
 
