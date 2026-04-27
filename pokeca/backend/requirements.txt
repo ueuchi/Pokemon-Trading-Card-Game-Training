@@ -7,14 +7,3 @@ pydantic==1.10.13
 
 # その他
 python-multipart==0.0.6
-
-# スクレイピング
-selenium>=4.16.0
-webdriver-manager>=4.0.1
-requests>=2.31.0
-
-# RL / CPU battle AI
-stable-baselines3>=2.3.2
-gymnasium>=0.29.1
-torch>=2.3.1
-numpy>=1.26.4
