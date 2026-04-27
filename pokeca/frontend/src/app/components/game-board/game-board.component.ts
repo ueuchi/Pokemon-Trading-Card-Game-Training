@@ -23,6 +23,9 @@ export class GameBoardComponent implements OnInit, OnDestroy {
   decks: Deck[] = [];
   selectedDeckId: number | null = null;
 
+  draggedCardUid: number | null = null;
+  dropHighlight: string | null = null;
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -227,6 +230,18 @@ export class GameBoardComponent implements OnInit, OnDestroy {
     await this.gameApi.endTurn();
   }
 
+  async retreat(): Promise<void> {
+    const p1 = this.gameApi.player1;
+    if (!p1?.active_pokemon) return;
+    const cost = p1.active_pokemon.retreat_cost ?? 0;
+    const energyIndices = Array.from(
+      { length: Math.min(cost, p1.active_pokemon.attached_energy.length) },
+      (_, i) => i,
+    );
+    const benchIndex = this.state?.selectedBenchIndex ?? 0;
+    await this.gameApi.sendAction('retreat', { benchIndex, energyIndices });
+  }
+
   resetGame(): void {
     this.gameApi.resetGame();
     this.selectedDeckId = null;
@@ -244,6 +259,115 @@ export class GameBoardComponent implements OnInit, OnDestroy {
   }
 
   // ==================== 表示ヘルパー ====================
+
+  getEmptyBenchSlotIndices(): number[] {
+    const count = Math.max(0, 5 - (this.gameApi.player1?.bench?.length ?? 0));
+    return Array.from({ length: count }, (_, i) => i);
+  }
+
+  // ==================== ドラッグ&ドロップ ====================
+
+  onDragStart(uid: number): void {
+    this.draggedCardUid = uid;
+  }
+
+  onDragEnd(): void {
+    this.draggedCardUid = null;
+    this.dropHighlight = null;
+  }
+
+  onDragOver(event: DragEvent, target: string): void {
+    event.preventDefault();
+    this.dropHighlight = target;
+  }
+
+  onDragLeave(event: DragEvent, target: string): void {
+    const el = event.currentTarget as HTMLElement;
+    const related = event.relatedTarget as Node | null;
+    if (related && el.contains(related)) return;
+    if (this.dropHighlight === target) this.dropHighlight = null;
+  }
+
+  async onDropToActive(event: DragEvent): Promise<void> {
+    event.preventDefault();
+    this.dropHighlight = null;
+    const uid = this.draggedCardUid;
+    this.draggedCardUid = null;
+    if (!uid || !this.gameApi.isPlayerTurn) return;
+    const card = this.gameApi.player1?.hand.find((c) => c.uid === uid);
+    if (card) await this._executeDropOnActive(card);
+  }
+
+  async onDropToBench(event: DragEvent, benchIndex: number): Promise<void> {
+    event.preventDefault();
+    this.dropHighlight = null;
+    const uid = this.draggedCardUid;
+    this.draggedCardUid = null;
+    if (!uid || !this.gameApi.isPlayerTurn) return;
+    const card = this.gameApi.player1?.hand.find((c) => c.uid === uid);
+    if (card) await this._executeDropOnBench(card, benchIndex);
+  }
+
+  async onDropToBenchArea(event: DragEvent): Promise<void> {
+    event.preventDefault();
+    this.dropHighlight = null;
+    const uid = this.draggedCardUid;
+    this.draggedCardUid = null;
+    if (!uid || !this.gameApi.isPlayerTurn) return;
+    const card = this.gameApi.player1?.hand.find((c) => c.uid === uid);
+    if (!card) return;
+    if (card.card_type === 'pokemon' && card.evolution_stage === 'たね') {
+      const bench = this.gameApi.player1?.bench ?? [];
+      if (bench.length < 5) await this.gameApi.sendAction('place_bench', { cardId: card.uid });
+    }
+  }
+
+  private async _executeDropOnActive(card: HandCard): Promise<void> {
+    const p1 = this.gameApi.player1;
+    if (!p1) return;
+    if (card.card_type === 'pokemon') {
+      if (card.evolution_stage === 'たね' && !p1.active_pokemon) {
+        await this.gameApi.sendAction('place_active', { cardId: card.uid });
+      } else if (
+        (card.evolution_stage === '1進化' || card.evolution_stage === '2進化') &&
+        p1.active_pokemon
+      ) {
+        await this.gameApi.sendAction('evolve_active', { cardId: card.uid });
+      }
+    } else if (card.card_type === 'energy' && !p1.energy_attached_this_turn && p1.active_pokemon) {
+      await this.gameApi.sendAction('attach_energy', { cardId: card.uid, target: 'active' });
+    } else if (card.card_type === 'trainer') {
+      const t = card.trainer_type;
+      if (t === 'supporter' && !p1.supporter_used_this_turn) {
+        await this.gameApi.sendAction('use_supporter', { cardId: card.uid });
+      } else if (t === 'stadium') {
+        await this.gameApi.sendAction('use_stadium', { cardId: card.uid });
+      } else {
+        await this.gameApi.sendAction('use_goods', { cardId: card.uid });
+      }
+    }
+  }
+
+  private async _executeDropOnBench(card: HandCard, benchIndex: number): Promise<void> {
+    const p1 = this.gameApi.player1;
+    if (!p1) return;
+    if (card.card_type === 'pokemon') {
+      if (
+        (card.evolution_stage === '1進化' || card.evolution_stage === '2進化') &&
+        benchIndex < p1.bench.length
+      ) {
+        await this.gameApi.sendAction('evolve_bench', { cardId: card.uid, benchIndex });
+      } else if (card.evolution_stage === 'たね' && p1.bench.length < 5) {
+        await this.gameApi.sendAction('place_bench', { cardId: card.uid });
+      }
+    } else if (card.card_type === 'energy' && !p1.energy_attached_this_turn) {
+      await this.gameApi.sendAction('attach_energy', {
+        cardId: card.uid,
+        target: 'bench',
+        benchIndex,
+      });
+    }
+  }
 
   // ==================== デッキ情報ヘルパー ====================
 
