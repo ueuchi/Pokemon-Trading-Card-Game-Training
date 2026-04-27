@@ -5,19 +5,8 @@ services:
     rootDir: pokeca/backend
     plan: free
     pythonVersion: 3.11.8
-    buildCommand: |
-      if [ -d pokeca/backend ]; then
-        cd pokeca/backend
-      fi
-      pip install -r requirements.txt
-      python database/setup.py
-    startCommand: |
-      if [ -d pokeca/backend ]; then
-        cd pokeca/backend
-      fi
-      python main.py
+    buildCommand: pip install -r requirements.txt && python database/setup.py
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.8
-      - key: CARGO_HOME
-        value: /tmp/cargo

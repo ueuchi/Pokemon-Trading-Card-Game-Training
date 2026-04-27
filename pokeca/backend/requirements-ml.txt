@@ -1,0 +1,10 @@
+# スクレイピング（ローカル開発用）
+selenium>=4.16.0
+webdriver-manager>=4.0.1
+requests>=2.31.0
+
+# RL / CPU battle AI 学習用（ローカル学習用・デプロイ不要）
+stable-baselines3>=2.3.2
+gymnasium>=0.29.1
+torch>=2.3.1
+numpy>=1.26.4
