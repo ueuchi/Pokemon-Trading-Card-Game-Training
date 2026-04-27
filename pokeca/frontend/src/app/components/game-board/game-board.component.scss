@@ -340,7 +340,9 @@
 }
 .init-card {
   width: 120px;
-  padding: 10px;
+  height: 168px;
+  box-sizing: border-box;
+  padding: 8px;
   border-radius: var(--radius);
   border: 2px solid var(--border);
   background: var(--surface);
@@ -360,8 +362,22 @@
     background: rgba(34, 197, 94, 0.1);
   }
 }
+.init-card-img-area {
+  width: 100%;
+  height: 96px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+}
 .init-card-img {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 6px;
 }
 .init-card-type-bar {
@@ -370,8 +386,7 @@
   border-radius: 2px;
 }
 .init-card-emoji {
-  font-size: 28px;
-  margin-top: 4px;
+  font-size: 32px;
 }
 .init-card-name {
   font-size: 12px;
@@ -987,6 +1002,41 @@
   width: 100%;
   text-align: center;
 }
+.bench-ghost-slot {
+  flex: 0 0 110px;
+  min-width: 110px;
+  max-width: 110px;
+  height: 80px;
+  border: 1px dashed rgba(148, 163, 184, 0.25);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  &.drop-target {
+    border-color: #4ade80;
+    background: rgba(34, 197, 94, 0.1);
+  }
+}
+.ghost-hint {
+  font-size: 20px;
+  color: rgba(148, 163, 184, 0.3);
+  .drop-target & {
+    color: #4ade80;
+  }
+}
+
+// ドロップターゲット共通ハイライト
+.active-zone.drop-target {
+  outline: 2px dashed #4ade80;
+  outline-offset: 3px;
+  border-radius: var(--radius);
+  background: rgba(34, 197, 94, 0.05);
+}
+.bench-card.drop-target {
+  border-color: #4ade80;
+  background: rgba(34, 197, 94, 0.12);
+}
 
 // ========== 手札 ==========
 .player-hand-actions {
@@ -1020,19 +1070,23 @@
   }
 }
 .hand-card {
-  min-width: 94px;
-  padding: 8px 6px;
+  width: 90px;
+  height: 130px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: 6px;
   border-radius: var(--radius-sm);
   border: 2px solid var(--border);
   background: var(--surface2);
-  cursor: pointer;
+  cursor: grab;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   transition: all 0.2s;
   position: relative;
   overflow: hidden;
+  user-select: none;
   &:hover {
     border-color: var(--muted);
     transform: translateY(-4px);
@@ -1049,6 +1103,10 @@
   &.trainer-card {
     border-color: rgba(167, 139, 250, 0.4);
   }
+  &.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
 }
 .hand-card-bar {
   position: absolute;
@@ -1057,24 +1115,46 @@
   right: 0;
   height: 3px;
 }
-.hand-card-img {
+.hand-card-img-area {
   width: 100%;
+  height: 68px;
+  flex-shrink: 0;
   border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
   margin-top: 4px;
 }
+.hand-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
 .hand-card-emoji {
-  font-size: 20px;
-  margin-top: 6px;
+  font-size: 22px;
 }
 .hand-card-name {
   font-size: 10px;
   font-weight: 700;
   text-align: center;
-  line-height: 1.3;
+  line-height: 1.2;
+  width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 .hand-card-stage {
   font-size: 9px;
   color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  text-align: center;
 }
 
 // ========== 右側情報列 ==========
@@ -1182,6 +1262,11 @@
     border-color: #f43f5e;
     color: #fb7185;
     animation: pulse 1s infinite;
+  }
+  &.btn-retreat {
+    background: rgba(249, 115, 22, 0.15);
+    border-color: #f97316;
+    color: #fb923c;
   }
 }
 .btn-end-turn {

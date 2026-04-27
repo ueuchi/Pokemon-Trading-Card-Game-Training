@@ -139,12 +139,14 @@
                   : toggleInitialActive(card.uid)
             "
           >
-            @if (card.image_url) {
-              <img class="init-card-img" [src]="card.image_url" [alt]="card.name" />
-            } @else {
-              <div class="init-card-type-bar" [style.background]="getTypeColor(card.type)"></div>
-              <span class="init-card-emoji">{{ getTypeEmoji(card.type) }}</span>
-            }
+            <div class="init-card-img-area">
+              @if (card.image_url) {
+                <img class="init-card-img" [src]="card.image_url" [alt]="card.name" />
+              } @else {
+                <div class="init-card-type-bar" [style.background]="getTypeColor(card.type)"></div>
+                <span class="init-card-emoji">{{ getTypeEmoji(card.type) }}</span>
+              }
+            </div>
             <span class="init-card-name">{{ card.name }}</span>
             @if (getPokemonTypeLabel(card.pokemon_type)) {
               <span class="trainer-badge">{{ getPokemonTypeLabel(card.pokemon_type) }}</span>
@@ -311,7 +313,13 @@
 
               <div class="vs-divider"><span class="vs-text">VS</span></div>
 
-              <div class="active-zone player-active-zone">
+              <div
+                class="active-zone player-active-zone"
+                [class.drop-target]="dropHighlight === 'active'"
+                (dragover)="onDragOver($event, 'active')"
+                (dragleave)="onDragLeave($event, 'active')"
+                (drop)="onDropToActive($event)"
+              >
                 @if (gameApi.player1?.active_pokemon; as ap) {
                   <div
                     class="active-card player-active"
@@ -391,6 +399,10 @@
                 <div
                   class="bench-card player-bench-card"
                   [class.bench-energy-target]="isBenchSelectedForEnergy($index)"
+                  [class.drop-target]="dropHighlight === 'bench-' + $index"
+                  (dragover)="onDragOver($event, 'bench-' + $index)"
+                  (dragleave)="onDragLeave($event, 'bench-' + $index)"
+                  (drop)="onDropToBench($event, $index)"
                   (click)="toggleBenchForEnergy($index)"
                 >
                   <div class="bench-type-dot" [style.background]="getTypeColor(b.type)"></div>
@@ -409,8 +421,16 @@
                   <span class="bench-energy">⚡{{ b.attached_energy.length }}</span>
                 </div>
               }
-              @if (!gameApi.player1?.bench?.length) {
-                <div class="empty-bench">ベンチなし</div>
+              @for (n of getEmptyBenchSlotIndices(); track n) {
+                <div
+                  class="bench-card bench-ghost-slot"
+                  [class.drop-target]="dropHighlight === 'bench-ghost'"
+                  (dragover)="onDragOver($event, 'bench-ghost')"
+                  (dragleave)="onDragLeave($event, 'bench-ghost')"
+                  (drop)="onDropToBenchArea($event)"
+                >
+                  <span class="ghost-hint">＋</span>
+                </div>
               }
             </div>
           </div>
@@ -432,15 +452,21 @@
                   [class.selected]="isHandCardSelected(card.uid)"
                   [class.energy-card]="card.card_type === 'energy'"
                   [class.trainer-card]="card.card_type === 'trainer'"
+                  [class.dragging]="draggedCardUid === card.uid"
                   [style.--card-color]="getTypeColor(card.type)"
+                  draggable="true"
+                  (dragstart)="onDragStart(card.uid)"
+                  (dragend)="onDragEnd()"
                   (click)="selectHandCard(card.uid)"
                 >
                   <div class="hand-card-bar" [style.background]="getTypeColor(card.type)"></div>
-                  @if (card.image_url) {
-                    <img class="hand-card-img" [src]="card.image_url" [alt]="card.name" />
-                  } @else {
-                    <span class="hand-card-emoji">{{ getTypeEmoji(card.type) }}</span>
-                  }
+                  <div class="hand-card-img-area">
+                    @if (card.image_url) {
+                      <img class="hand-card-img" [src]="card.image_url" [alt]="card.name" />
+                    } @else {
+                      <span class="hand-card-emoji">{{ getTypeEmoji(card.type) }}</span>
+                    }
+                  </div>
                   <span class="hand-card-name">{{ card.name }}</span>
                   @if (card.card_type === 'pokemon' && card.evolution_stage) {
                     <span class="hand-card-stage">{{ card.evolution_stage }}</span>
@@ -529,6 +555,14 @@
                 }
                 @if (canEvolveActive) {
                   <button class="btn-action btn-evolve" (click)="evolveActive()">🌟 進化</button>
+                }
+                @if (canRetreat) {
+                  <button class="btn-action btn-retreat" (click)="retreat()">
+                    🏃 にげる
+                    @if (gameApi.player1?.active_pokemon?.retreat_cost) {
+                      ({{ gameApi.player1!.active_pokemon!.retreat_cost }})
+                    }
+                  </button>
                 }
                 @if (state?.selectedAttackIndex != null) {
                   <button class="btn-action btn-attack" (click)="executeAttack()">⚔️ ワザ</button>
