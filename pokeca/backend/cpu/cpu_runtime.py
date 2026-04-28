@@ -28,12 +28,11 @@ class CpuPolicy(Protocol):
 class RuleBasedCpuPolicy:
     """既存のルールベースCPUを使う戦略。"""
 
-    def __init__(self, player_id: str = "player2") -> None:
+    def __init__(self, player_id: str = "player2", difficulty: CpuDifficulty = CpuDifficulty.NORMAL) -> None:
         self.player_id = player_id
-        self.ai = CpuAI(CpuDifficulty.NORMAL, player_id=player_id)
+        self.ai = CpuAI(difficulty, player_id=player_id)
 
     def play_turn(self, game_state) -> list[dict]:
-        # 既存ロジックをそのまま使うことで、現行ルールとの整合性を保つ。
         return self.ai.take_turn(game_state)
 
 
@@ -178,11 +177,19 @@ class PpoCpuPolicy:
 class CpuRuntime:
     """CPUの実行窓口。
 
-    ここだけをAPI層から呼ぶことで、将来の戦略追加時の変更点を最小化する。
+    fixed_mode を指定するとそのモードを固定で使用する（env var より優先）。
+    指定しない場合は env var (CPU_AI_MODE) を参照する。
     """
 
-    def __init__(self, player_id: str = "player2") -> None:
+    def __init__(
+        self,
+        player_id: str = "player2",
+        fixed_mode: str | None = None,
+        fixed_model_path: str | None = None,
+    ) -> None:
         self.player_id = player_id
+        self._fixed_mode = fixed_mode
+        self._fixed_model_path = fixed_model_path
         self._policy: CpuPolicy = RuleBasedCpuPolicy(player_id=player_id)
         self._policy_key: tuple[str, str, str, str] = ("heuristic", "", "", "")
 
@@ -217,18 +224,19 @@ class CpuRuntime:
         return default_weights, threshold
 
     def _resolve_policy(self) -> CpuPolicy:
-        mode = os.getenv("CPU_AI_MODE", "heuristic").lower().strip()
-        model_path = os.getenv("CPU_AI_MODEL_PATH", "").strip()
+        mode = (self._fixed_mode or os.getenv("CPU_AI_MODE", "heuristic")).lower().strip()
+        model_path = (self._fixed_model_path or os.getenv("CPU_AI_MODEL_PATH", "")).strip()
         weights_raw = os.getenv("CPU_RULE_PLUS_WEIGHTS", "").strip()
         threshold_raw = os.getenv("CPU_RULE_PLUS_HARD_THRESHOLD", "").strip()
         key = (mode, model_path, weights_raw, threshold_raw)
 
-        # 設定が変わった時だけ戦略を再構築する。
         if key == self._policy_key:
             return self._policy
 
-        if mode == "ppo" and model_path:
-            self._policy = PpoCpuPolicy(model_path=model_path, player_id=self.player_id)
+        if mode == "easy":
+            self._policy = RuleBasedCpuPolicy(player_id=self.player_id, difficulty=CpuDifficulty.EASY)
+        elif mode == "hard":
+            self._policy = EnhancedRuleBasedCpuPolicy(player_id=self.player_id)
         elif mode in ("rule_plus", "heuristic_plus"):
             weights, threshold = self._load_rule_plus_config()
             self._policy = EnhancedRuleBasedCpuPolicy(
@@ -236,6 +244,8 @@ class CpuRuntime:
                 weights=weights,
                 hard_threshold=threshold,
             )
+        elif mode in ("ppo", "ml") and model_path:
+            self._policy = PpoCpuPolicy(model_path=model_path, player_id=self.player_id)
         else:
             self._policy = RuleBasedCpuPolicy(player_id=self.player_id)
 

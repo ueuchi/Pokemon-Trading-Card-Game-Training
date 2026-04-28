@@ -199,7 +199,7 @@ class CpuAI:
         player = game_state.get_player(self.player_id)
         if player.energy_attached_this_turn or not player.has_active:
             return None
-        energy_cards = [c for c in player.hand if c.evolution_stage == "エネルギー"]
+        energy_cards = [c for c in player.hand if c.card_type == "energy" or c.evolution_stage == "エネルギー"]
         if not energy_cards:
             return None
         active = player.active_pokemon
@@ -212,7 +212,7 @@ class CpuAI:
         player = game_state.get_player(self.player_id)
         if player.energy_attached_this_turn or not player.has_active:
             return None
-        energy_cards = [c for c in player.hand if c.evolution_stage == "エネルギー"]
+        energy_cards = [c for c in player.hand if c.card_type == "energy" or c.evolution_stage == "エネルギー"]
         if not energy_cards:
             return None
         active = player.active_pokemon
