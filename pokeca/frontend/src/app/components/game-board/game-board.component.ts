@@ -22,6 +22,7 @@ export class GameBoardComponent implements OnInit, OnDestroy {
   state: GameUiState | null = null;
   decks: Deck[] = [];
   selectedDeckId: number | null = null;
+  selectedDifficulty: string = 'normal';
 
   draggedCardUid: number | null = null;
   dropHighlight: string | null = null;
@@ -71,7 +72,7 @@ export class GameBoardComponent implements OnInit, OnDestroy {
 
   async startGame(): Promise<void> {
     if (!this.selectedDeckId) return;
-    await this.gameApi.startGame(this.selectedDeckId);
+    await this.gameApi.startGame(this.selectedDeckId, this.selectedDifficulty);
   }
 
   // ==================== コイントス ====================

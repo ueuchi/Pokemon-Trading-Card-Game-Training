@@ -28,13 +28,14 @@ from engine.actions.attack import declare_attack
 from engine.actions.faint import send_to_active_from_bench
 from engine.deck_validator import validate_deck
 from cpu.cpu_runtime import CpuRuntime
-from cpu.game_session import create_session, get_session, delete_session
+from cpu.game_session import create_session, get_session, get_cpu_runtime, delete_session
 from database.connection import get_db_connection
 from repositories.card_repository import CardRepository
 
 router = APIRouter(prefix="/api/game/cpu", tags=["CPU対戦"])
 
-_cpu_runtime = CpuRuntime(player_id="player2")
+_ML_MODEL_PATH = "cpu/models/ppo_final.zip"
+_default_cpu_runtime = CpuRuntime(player_id="player2")
 
 
 # ==================== リクエストモデル ====================
@@ -42,6 +43,7 @@ _cpu_runtime = CpuRuntime(player_id="player2")
 class StartGameRequest(BaseModel):
     player_deck_id: int
     cpu_deck_id: Optional[int] = None
+    cpu_difficulty: str = "normal"  # "easy" | "normal" | "hard" | "ml"
 
 
 class PlaceInitialRequest(BaseModel):
@@ -115,12 +117,22 @@ def _get_cpu_deck(conn) -> list:
     return _load_deck_from_db(conn, row["id"])
 
 
-def _run_cpu_turn(game_state) -> list:
-    """CPUターンを実行する共通入口。
+def _build_cpu_runtime(difficulty: str) -> CpuRuntime:
+    """難易度に応じたCpuRuntimeを生成する。"""
+    import os
+    if difficulty == "ml":
+        model_path = os.path.abspath(_ML_MODEL_PATH)
+        if os.path.exists(model_path):
+            return CpuRuntime(player_id="player2", fixed_mode="ml", fixed_model_path=model_path)
+        # モデル未生成時はHARDにフォールバック
+        return CpuRuntime(player_id="player2", fixed_mode="hard")
+    return CpuRuntime(player_id="player2", fixed_mode=difficulty)
 
-    実行戦略はCpuRuntimeが管理し、将来のCPU差し替えを容易にする。
-    """
-    return _cpu_runtime.play_turn(game_state)
+
+def _run_cpu_turn(game_state, game_id: str | None = None) -> list:
+    """CPUターンを実行する共通入口。セッション別のCpuRuntimeを優先使用する。"""
+    runtime = (get_cpu_runtime(game_id) if game_id else None) or _default_cpu_runtime
+    return runtime.play_turn(game_state)
 
 
 # ==================== エンドポイント ====================
@@ -147,10 +159,12 @@ async def start_cpu_game(request: StartGameRequest):
 
         # ゲーム初期化（コイントス・マリガン・サイドカードセット）
         game_state = setup_game(p1_deck, p2_deck)
-        game_id = create_session(game_state)
+        cpu_runtime = _build_cpu_runtime(request.cpu_difficulty)
+        game_id = create_session(game_state, cpu_runtime)
 
         return {
             "game_id": game_id,
+            "cpu_difficulty": request.cpu_difficulty,
             "message": "ゲームを初期化しました。初期ポケモンを配置してください。",
             "state": game_state.to_dict(),
         }
@@ -205,7 +219,7 @@ async def place_initial(game_id: str, request: PlaceInitialRequest):
         # 先行がCPUなら即ターン実行
         cpu_actions = []
         if game_state.current_player_id == "player2":
-            cpu_actions = _run_cpu_turn(game_state)
+            cpu_actions = _run_cpu_turn(game_state, game_id)
 
         return {
             "message": "ゲーム開始！",
@@ -295,7 +309,7 @@ async def player_end_turn(game_id: str):
 
     cpu_actions = []
     if not game_state.is_game_over:
-        cpu_actions = _run_cpu_turn(game_state)
+        cpu_actions = _run_cpu_turn(game_state, game_id)
 
     return {
         "end_result": end_result,

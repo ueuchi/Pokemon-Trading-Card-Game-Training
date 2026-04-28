@@ -54,6 +54,31 @@
             </div>
           }
         </div>
+        <div class="difficulty-section">
+          <p class="difficulty-label">CPU 難易度</p>
+          <div class="difficulty-options">
+            @for (opt of [
+              { value: 'easy',   label: 'かんたん',      icon: '🟢' },
+              { value: 'normal', label: 'ふつう',        icon: '🟡' },
+              { value: 'hard',   label: 'むずかしい',    icon: '🔴' },
+              { value: 'ml',     label: 'AI（学習済み）', icon: '🤖' }
+            ]; track opt.value) {
+              <label
+                class="difficulty-chip"
+                [class.selected]="selectedDifficulty === opt.value"
+              >
+                <input
+                  type="radio"
+                  name="difficulty"
+                  [value]="opt.value"
+                  [(ngModel)]="selectedDifficulty"
+                />
+                {{ opt.icon }} {{ opt.label }}
+              </label>
+            }
+          </div>
+        </div>
+
         @if (state?.error) {
           <p class="error-msg">⚠️ {{ state!.error }}</p>
         }

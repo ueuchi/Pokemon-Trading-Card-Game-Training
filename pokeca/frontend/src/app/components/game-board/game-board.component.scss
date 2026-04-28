@@ -420,6 +420,47 @@
   padding: 20px;
 }
 
+// ========== 難易度選択 ==========
+.difficulty-section {
+  margin-bottom: 20px;
+}
+.difficulty-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+.difficulty-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.difficulty-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.15s;
+  user-select: none;
+  input[type='radio'] {
+    display: none;
+  }
+  &:hover {
+    border-color: var(--muted);
+  }
+  &.selected {
+    border-color: var(--accent);
+    background: rgba(249, 198, 19, 0.12);
+    color: var(--accent);
+  }
+}
+
 // ========== ボタン共通 ==========
 .btn-start {
   width: 100%;

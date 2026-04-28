@@ -156,13 +156,14 @@ export class GameApiService {
 
   // ==================== ゲーム開始 ====================
 
-  async startGame(playerDeckId: number, cpuDeckId?: number): Promise<void> {
+  async startGame(playerDeckId: number, cpuDifficulty: string = 'normal', cpuDeckId?: number): Promise<void> {
     this.patch({ isLoading: true, error: null });
     try {
       const res: any = await firstValueFrom(
         this.http.post(`${this.baseUrl}/start`, {
           player_deck_id: playerDeckId,
           cpu_deck_id: cpuDeckId ?? null,
+          cpu_difficulty: cpuDifficulty,
         }),
       );
       const gs: GameStateResponse = res.state;
