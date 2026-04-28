@@ -2,11 +2,9 @@ services:
   - type: web
     name: pokemon-card-api
     runtime: python
-    rootDir: pokeca/backend
     plan: free
-    pythonVersion: 3.11.8
-    buildCommand: pip install -r requirements.txt && python database/setup.py
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: cd pokeca/backend && pip install -r requirements.txt && python database/setup.py
+    startCommand: cd pokeca/backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.8
